@@ -57,6 +57,15 @@ nav.bn button.on{color:var(--pri)}nav.bn svg{width:23px;height:23px}
 .empty{text-align:center;color:var(--mu);padding:36px 10px}.empty b{display:block;color:var(--ink);font-family:"Playfair Display",Georgia,serif;font-size:18px;margin-bottom:4px}
 .hero{text-align:center;padding-top:8vh}.hero h1{font-size:40px;margin:8px 0}.hero p{color:var(--mu)}
 .logo{width:64px;height:64px;margin:0 auto;border-radius:18px;background:linear-gradient(135deg,#14213d,#233a6b);color:#d8bd85;display:flex;align-items:center;justify-content:center;font-size:28px}
+.rx{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center}
+button.rb{padding:4px 11px;border-radius:99px;background:var(--soft);border:1px solid var(--line);color:var(--ink);font-size:14px;font-weight:500}
+button.rb.mine{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 16%,transparent)}
+button.rb small{margin-left:4px;color:var(--mu);font-weight:700}
+.pick{margin-top:8px;padding:8px;background:var(--soft);border-radius:12px;display:flex;flex-wrap:wrap;gap:2px;border:1px solid var(--line)}
+.pick button{background:none;font-size:24px;padding:4px 7px;border-radius:9px;color:inherit}
+.ov{position:fixed;inset:0;background:rgba(10,15,30,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}
+.dlg{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;max-width:360px;width:100%;box-shadow:var(--sh)}
+.dlg p{margin:0 0 16px;font-weight:600;line-height:1.4}
 </style></head><body><div id="app"><div class="empty">Loading…</div></div>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -67,7 +76,7 @@ const app=initializeApp({apiKey:"AIzaSyBlKJRh4tzKPBHYwMeVq4UqleA3y_aayG0",authDo
 const auth=getAuth(app),db=getFirestore(app);
 const TYPES={cancel:"Class cancelled",resched:"Rescheduled",extra:"Extra class",room:"Room change"};
 const RL={student:"Student",cr:"CR",teacher:"Teacher",admin:"Admin"};
-const S={user:null,me:null,meLoaded:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],users:[],tab:"feed",editId:null,formOpen:false,q:"",stage:"load",unsubs:[],reqUnsub:[],reqRole:null,started:false,usersSub:false,shellKey:""};
+const S={user:null,me:null,meLoaded:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],users:[],tab:"feed",editId:null,formOpen:false,q:"",stage:"load",unsubs:[],reqUnsub:[],reqRole:null,started:false,usersSub:false,shellKey:"",reacts:[],pickId:null,more:false,dataUnsubs:[],ptab:"active"};
 const $=s=>document.querySelector(s);
 const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const rich=t=>esc(t).replace(/@([a-z0-9_]{3,15})/gi,'<span class="mn">@$1</span>');
@@ -76,6 +85,7 @@ const fmtD=d=>d?new Date(d+"T00:00:00").toLocaleDateString([],{weekday:"short",d
 const fmtT=t=>t?new Date("1970-01-01T"+t).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}):"—";
 const role=()=>S.me?.role||"student";
 const isAdmin=()=>role()==="admin",isT=()=>["teacher","admin"].includes(role()),isCR=()=>["cr","admin"].includes(role()),isP=()=>["teacher","cr","admin"].includes(role());
+function ask(msg){return new Promise(res=>{const o=document.createElement("div");o.className="ov";o.innerHTML=`<div class="dlg"><p>${esc(msg)}</p><div class="row"><button class="no" id="y">Yes</button><button class="g" id="n">No</button></div></div>`;document.body.appendChild(o);const done=v=>{o.remove();res(v)};o.querySelector("#y").onclick=()=>done(true);o.querySelector("#n").onclick=()=>done(false)})}
 const fail=e=>alert("Failed: "+(e.code||e.message||e));
 const empty=(a,b)=>`<div class="empty"><b>${a}</b>${b}</div>`;
 const init=n=>esc((n||"?").trim()[0]||"?").toUpperCase();
@@ -159,7 +169,7 @@ function renderForm(){
 }
 function byBlock(n){
   const p=prof(n.byId);
-  return `<div class="by"><div class="av">${init(n.byName)}</div><div><div class="nm">${esc(n.byName)}</div><div class="mu">@${esc(n.byNick||p?.nick||"")} · ${RL[p?.role||n.byRole]||""}</div></div></div>`;
+  return `<div class="by"><div class="av">${init(n.byName)}</div><div><div class="nm">${esc(p?.name||n.byName)}</div><div class="mu">@${esc(p?.nick||n.byNick||"")} · ${RL[p?.role||n.byRole]||""}</div></div></div>`;
 }
 function nCard(n){
   const cnt=S.acks.filter(a=>a.n===n.id).length,mine=S.acks.some(a=>a.n===n.id&&a.uid===S.user.uid);
@@ -167,10 +177,26 @@ function nCard(n){
   const tos=(n.mentions||[]).map(id=>prof(id)?.nick).filter(Boolean);
   return `<article class="card n" style="--c:var(--${esc(n.type)})"><div class="n-top"><span class="chip">${esc(TYPES[n.type]||n.type)}</span><span class="when">${fmtTs(n.ts)}</span></div>
   <h3>${esc(n.course)}</h3><div class="facts"><div><b>Date</b><span>${fmtD(n.date)}</span></div><div><b>Time</b><span>${fmtT(n.time)}</span></div><div><b>Room</b><span>${esc(n.room)||"—"}</span></div></div>
-  ${n.note?`<div class="note">${rich(n.note)}</div>`:""}${byBlock(n)}
+  ${n.note?`<div class="note">${rich(n.note)}</div>`:""}${byBlock(n)}${rxBar(n)}
   <div class="foot"><span class="pill ${ment?"me":""}">${ment?"Mentions you":"✔ "+cnt+" seen"}${tos.length&&!ment?" · to "+tos.map(t=>"@"+esc(t)).join(" "):""}</span><span class="row">
   ${own?`<button class="g sm" data-edit="${esc(n.id)}">Edit</button><button class="g sm" data-del="${esc(n.id)}">Delete</button>`:""}
   ${!isT()&&n.byId!==S.user.uid?`<button class="sm ${mine?"g":""}" data-seen="${esc(n.id)}" ${mine?"disabled":""}>${mine?"Seen ✔":"Mark seen"}</button>`:""}</span></div></article>`;
+}
+const QUICK=["👍","👎","❤️","😂","😮","😢","🙏"];
+const MORE=["🔥","🎉","👏","💯","✅","❌","😍","🥰","😎","🤔","😅","😭","😡","🤝","💪","🙌","👌","✌️","🤞","😴","🤯","🥳","😇","🙄","😬","🤗","👀","💔","💖","⭐","🏆","📚","📝","⏰","😊","😁","😆","🥲","😤","🤩"];
+function firstEmoji(t){t=(t||"").trim();if(!t)return "";let g;try{g=[...new Intl.Segmenter(undefined,{granularity:"grapheme"}).segment(t)][0].segment}catch(e){g=[...t][0]}return /\p{Extended_Pictographic}/u.test(g)?g:""}
+function rxBar(n){
+  const rs=S.reacts.filter(r=>r.n===n.id),mine=rs.find(r=>r.uid===S.user.uid),g={};
+  rs.forEach(r=>(g[r.e]=g[r.e]||[]).push(r));
+  const chips=Object.entries(g).sort((a,b)=>b[1].length-a[1].length).map(([e,a])=>`<button class="rb ${mine?.e===e?"mine":""}" data-react="${esc(e)}" data-id="${esc(n.id)}" title="${esc(a.map(x=>x.name).join(", "))}">${esc(e)}<small>${a.length}</small></button>`).join("");
+  const pick=S.pickId===n.id?`<div class="pick">${QUICK.map(e=>`<button data-react="${e}" data-id="${esc(n.id)}">${e}</button>`).join("")}<button data-more="1">➕</button>${S.more?`<div style="width:100%;display:flex;flex-wrap:wrap;gap:2px">${MORE.map(e=>`<button data-react="${e}" data-id="${esc(n.id)}">${e}</button>`).join("")}</div><div class="row" style="width:100%;margin-top:6px"><input id="ce" placeholder="Type any emoji"><button class="sm" style="flex:0 0 auto;font-size:14px" data-custom="${esc(n.id)}">React</button></div>`:""}</div>`:"";
+  return `<div class="rx">${chips}<button class="rb" data-pick="${esc(n.id)}">${mine?"Change":"☺ React"}</button></div>${pick}`;
+}
+async function toggleReact(nid,e){
+  const id=nid+"_"+S.user.uid,ex=S.reacts.find(r=>r.id===id);S.pickId=null;S.more=false;
+  if(ex&&ex.e===e)await deleteDoc(doc(db,"reactions",id));
+  else await setDoc(doc(db,"reactions",id),{n:nid,uid:S.user.uid,e,name:S.prof?.nick||S.me.name,ts:Date.now()});
+  renderList();
 }
 function rCard(r){
   const st=r.status||"pending",lbl={pending:"Waiting",yes:"Class will be held",no:"Class cancelled",later:"Will reschedule"}[st],col=st==="pending"?"resched":st==="yes"?"extra":"cancel";
@@ -186,10 +212,10 @@ function uCard(u){
   const roleSel=(id,val,opts)=>`<select id="${id}" data-role="${esc(u.id)}" ${self?"disabled":""}>${opts.map(k=>`<option value="${k}" ${val===k?"selected":""}>${RL[k]}</option>`).join("")}</select>`;
   let act="";
   if(st==="pending")act=`<label class="l">Approve as</label>${roleSel("ar_"+u.id,u.reqRole||"student",["student","teacher","cr"])}<div class="row"><button class="ok sm" data-approve="${esc(u.id)}">Approve</button><button class="no sm" data-reject="${esc(u.id)}">Reject</button></div>`;
-  else if(st==="approved")act=`<div class="row">${roleSel("rs_"+u.id,u.role,["student","cr","teacher","admin"])}${self?"":`<button class="g sm" data-block="${esc(u.id)}">Block</button>`}</div>`;
-  else act=`<button class="g sm" data-approve="${esc(u.id)}">Restore access</button>`;
+  else if(st==="approved")act=`${roleSel("rs_"+u.id,u.role,["student","cr","teacher","admin"])}${self?"":`<div class="row"><button class="g sm" data-block="${esc(u.id)}">Block</button><button class="no sm" data-remove="${esc(u.id)}">Remove</button></div>`}`;
+  else act=`<div class="row"><button class="g sm" data-unblock="${esc(u.id)}">Unblock</button><button class="no sm" data-remove="${esc(u.id)}">Remove</button></div>`;
   return `<div class="card"><div class="top" style="display:flex;justify-content:space-between;gap:8px"><div><b>${esc(nm)}</b> <span class="mn">@${esc(p?.nick||"—")}</span></div><span class="pill">${st==="approved"?RL[u.role]:st}</span></div>
-  <div class="mu">${esc(u.email)}${u.sid?" · ID "+esc(u.sid):""}</div>${act}</div>`;
+  <div class="mu">${esc(u.email)}${u.sid?" · ID "+esc(u.sid):""}</div><div style="margin:8px 0 2px"><button class="g sm" data-editu="${esc(u.id)}">Edit name / nickname</button></div>${act}</div>`;
 }
 function renderList(){
   const l=$("#list");if(!l)return;
@@ -198,7 +224,9 @@ function renderList(){
   else if(S.tab==="people"){
     const q=S.q.toLowerCase(),us=S.users.filter(u=>((u.name||"")+" "+(prof(u.id)?.nick||"")+" "+(u.email||"")+" "+(u.sid||"")).toLowerCase().includes(q));
     const grp=(t,f)=>{const a=us.filter(u=>stat(u)===f);return a.length?`<h2>${t} (${a.length})</h2>`+a.map(uCard).join(""):""};
-    l.innerHTML=grp("Waiting for approval","pending")+grp("Members","approved")+grp("Blocked","rejected")||empty("No users","");
+    const nb=S.users.filter(u=>stat(u)==="rejected").length,seg=`<div class="row" style="margin-bottom:6px"><button class="${S.ptab==="active"?"":"g"}" data-ptab="active">Active</button><button class="${S.ptab==="blocked"?"":"g"}" data-ptab="blocked">Blocked (${nb})</button></div>`;
+    if(S.ptab==="blocked"){const a=us.filter(u=>stat(u)==="rejected");l.innerHTML=seg+`<h2>Block list (${a.length})</h2>`+(a.length?a.map(uCard).join(""):empty("No blocked users","People you block or reject appear here."))}
+    else l.innerHTML=seg+(grp("Waiting for approval","pending")+grp("Members","approved")||empty("No users",""));
   }else l.innerHTML=`<div class="card"><b class="serif" style="font-size:20px">${esc(S.me.name)}</b><div class="mu">@${esc(S.prof?.nick||"")} · ${RL[role()]}</div><div class="mu">${esc(S.me.email)}</div>${S.me.sid?`<div class="mu">ID ${esc(S.me.sid)}</div>`:""}
   <button class="g" id="out2" style="margin-top:12px;width:100%">Sign out</button></div><div class="card mu">Push notifications will arrive in the next update. For now, open the app to see new notices.</div>`;
   $("#out2")&&($("#out2").onclick=()=>signOut(auth));
@@ -233,6 +261,14 @@ async function askReq(){
   if(!men.length)return alert("Mention at least one teacher, e.g. tap a name below the message.");
   try{await addDoc(collection(db,"requests"),{course:c,message:m,mentions:men,byId:S.user.uid,byName:S.me.name,byNick:S.prof.nick,byRole:role(),status:"pending",ts:Date.now()});S.formOpen=false;renderForm()}catch(e){fail(e)}
 }
+const nameOf=id=>prof(id)?.name||S.users.find(u=>u.id===id)?.name||"this user";
+async function removeUser(id){
+  const p=prof(id),bb=writeBatch(db);
+  bb.delete(doc(db,"users",id));bb.delete(doc(db,"profiles",id));if(p?.nick)bb.delete(doc(db,"nicks",p.nick));
+  S.acks.filter(a=>a.uid===id).forEach(a=>bb.delete(doc(db,"acks",a.n+"_"+id)));
+  S.reacts.filter(r=>r.uid===id).forEach(r=>bb.delete(doc(db,"reactions",r.id)));
+  await bb.commit();
+}
 async function setRole(uid,r,extra){const b=writeBatch(db);b.update(doc(db,"users",uid),{role:r,...extra});b.update(doc(db,"profiles",uid),{role:r});await b.commit()}
 document.addEventListener("click",async e=>{
   const b=e.target.closest("button");if(!b||S.stage!=="app")return;const d=b.dataset;
@@ -244,7 +280,33 @@ document.addEventListener("click",async e=>{
     else if(d.seen)await setDoc(doc(db,"acks",d.seen+"_"+S.user.uid),{n:d.seen,uid:S.user.uid,name:S.me.name,ts:Date.now()});
     else if(d.rep)await updateDoc(doc(db,"requests",d.id),{status:d.rep,repBy:S.prof.nick});
     else if(d.approve){const r=$("#ar_"+d.approve)?.value;await setRole(d.approve,r||S.users.find(u=>u.id===d.approve)?.role||"student",{status:"approved"})}
-    else if(d.reject||d.block)await updateDoc(doc(db,"users",d.reject||d.block),{status:"rejected"});
+    else if(d.react)await toggleReact(d.id,d.react);
+    else if(d.pick){S.pickId=S.pickId===d.pick?null:d.pick;S.more=false;renderList()}
+    else if(d.more){S.more=!S.more;renderList()}
+    else if(d.custom){const v=firstEmoji($("#ce").value);if(!v)return alert("Type an emoji first");await toggleReact(d.custom,v)}
+    else if(d.editu&&isAdmin()){
+      const u=S.users.find(x=>x.id===d.editu),p=prof(d.editu);
+      const nm=prompt("Full name",p?.name||u?.name||"");if(nm===null)return;
+      const nk=prompt("Nickname (3-15: letters, numbers, _)",p?.nick||"");if(nk===null)return;
+      const name=nm.trim(),nick=nk.trim().toLowerCase().replace(/^@/,"");
+      if(name.length<3)return alert("Name is too short");
+      if(!/^[a-z0-9_]{3,15}$/.test(nick))return alert("Invalid nickname");
+      if(S.profs.some(x=>x.nick===nick&&x.id!==d.editu))return alert("That nickname is already used");
+      const bb=writeBatch(db);
+      bb.set(doc(db,"profiles",d.editu),{name,nick,role:u?.role||"student"},{merge:true});
+      bb.update(doc(db,"users",d.editu),{name});
+      if(p?.nick&&p.nick!==nick)bb.delete(doc(db,"nicks",p.nick));
+      bb.set(doc(db,"nicks",nick),{uid:d.editu});
+      await bb.commit();
+    }
+    else if(d.ptab){S.ptab=d.ptab;renderList()}
+    else if(d.reject){if(await ask("Reject this request? The person will go to the Block list."))await updateDoc(doc(db,"users",d.reject),{status:"rejected"})}
+    else if(d.block){const nm=nameOf(d.block);if(await ask(`Block ${nm}?`)&&await ask(`${nm} will lose access to all notices. Block now?`))await updateDoc(doc(db,"users",d.block),{status:"rejected"})}
+    else if(d.unblock){const nm=nameOf(d.unblock),u=S.users.find(x=>x.id===d.unblock);
+      if(await ask(`Unblock ${nm}? They will need your approval again, like a new login.`)){const bb=writeBatch(db);
+        bb.update(doc(db,"users",d.unblock),{status:"pending",role:"student",reqRole:u?.role==="teacher"?"teacher":"student"});
+        if(prof(d.unblock))bb.update(doc(db,"profiles",d.unblock),{role:"student"});await bb.commit()}}
+    else if(d.remove){const nm=nameOf(d.remove);if(await ask(`Are you sure you want to remove ${nm}?`)&&await ask(`${nm} will be removed and must request approval again like a new user. Remove now?`))await removeUser(d.remove)}
   }catch(er){fail(er)}
 });
 document.addEventListener("change",async e=>{
@@ -253,7 +315,8 @@ document.addEventListener("change",async e=>{
 });
 
 /* ---------- state / routing ---------- */
-function stopAll(){[...S.unsubs,...S.reqUnsub].forEach(f=>f());Object.assign(S,{unsubs:[],reqUnsub:[],started:false,usersSub:false,me:null,meLoaded:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],users:[],reqRole:null,tab:"feed",formOpen:false,editId:null,shellKey:""})}
+function stopAll(){[...S.unsubs,...S.dataUnsubs,...S.reqUnsub].forEach(f=>f());Object.assign(S,{unsubs:[],dataUnsubs:[],reqUnsub:[],started:false,usersSub:false,ptab:"active",me:null,meLoaded:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],reacts:[],pickId:null,more:false,users:[],reqRole:null,tab:"feed",formOpen:false,editId:null,shellKey:""})}
+function stopData(){[...S.dataUnsubs,...S.reqUnsub].forEach(f=>f());Object.assign(S,{dataUnsubs:[],reqUnsub:[],started:false,usersSub:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],reacts:[],users:[],reqRole:null,shellKey:""})}
 function subReqs(){
   S.reqUnsub.forEach(f=>f());S.reqUnsub=[];S.reqRole=role();S.reqs=[];const c=collection(db,"requests"),u=S.user.uid;
   const cb=x=>{S.reqs=x.docs.map(d=>({id:d.id,...d.data()}));if(S.stage==="app"){renderNav();if(S.tab==="reqs")renderList()}};
@@ -263,12 +326,13 @@ function subReqs(){
 }
 function startApp(){
   if(!S.started){S.started=true;
-    on(S.unsubs,collection(db,"profiles"),x=>{S.profs=x.docs.map(d=>({id:d.id,...d.data()}));S.profsLoaded=true;S.prof=prof(S.user.uid)||null;route()});
-    on(S.unsubs,query(collection(db,"notices"),orderBy("ts","desc"),limit(60)),x=>{S.notices=x.docs.map(d=>({id:d.id,...d.data()}));refresh()});
-    on(S.unsubs,collection(db,"acks"),x=>{S.acks=x.docs.map(d=>d.data());refresh()});
+    on(S.dataUnsubs,collection(db,"profiles"),x=>{S.profs=x.docs.map(d=>({id:d.id,...d.data()}));S.profsLoaded=true;S.prof=prof(S.user.uid)||null;route()});
+    on(S.dataUnsubs,query(collection(db,"notices"),orderBy("ts","desc"),limit(60)),x=>{S.notices=x.docs.map(d=>({id:d.id,...d.data()}));refresh()});
+    on(S.dataUnsubs,collection(db,"acks"),x=>{S.acks=x.docs.map(d=>d.data());refresh()});
+    on(S.dataUnsubs,query(collection(db,"reactions"),limit(5000)),x=>{S.reacts=x.docs.map(d=>({id:d.id,...d.data()}));refresh()});
   }
   if(S.reqRole!==role())subReqs();
-  if(isAdmin()&&!S.usersSub){S.usersSub=true;on(S.unsubs,query(collection(db,"users"),limit(400)),x=>{S.users=x.docs.map(d=>({id:d.id,...d.data()}));refresh()})}
+  if(isAdmin()&&!S.usersSub){S.usersSub=true;on(S.dataUnsubs,query(collection(db,"users"),limit(400)),x=>{S.users=x.docs.map(d=>({id:d.id,...d.data()}));refresh()})}
 }
 function refresh(){if(S.stage!=="app")return;renderNav();if(S.tab!=="me")renderList()}
 function route(){
@@ -279,6 +343,7 @@ function route(){
   else{const s=stat(S.me);
     if(s==="pending"||s==="rejected")st="wait";
     else{startApp();st=!S.profsLoaded?"load":!S.prof?"register":"app"}}
+  if(S.started&&(!S.me||st==="wait"))stopData();
   const key=st+"|"+(S.me?stat(S.me)+role():"")+"|"+(S.prof?.nick||"");
   if(st==="app"&&S.stage==="app"){if(S.shellKey!==role()+"|"+(S.prof?.nick||"")){if(S.reqRole!==role())subReqs();shell()}else refresh();return}
   S.stage=st;
