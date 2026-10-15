@@ -5,9 +5,11 @@
 <title>MGT-39</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<script>try{var t=localStorage.getItem("mgt_theme");if(t&&t!=="auto")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <style>
 :root{--bg:#f4f1ea;--card:#fff;--ink:#14213d;--mu:#6b7280;--line:#e7e2d7;--pri:#14213d;--pritx:#fff;--gold:#b08a3e;--soft:#f8f6f0;--sh:0 1px 2px rgba(20,33,61,.06),0 10px 26px rgba(20,33,61,.07);--cancel:#b3261e;--resched:#b7791f;--extra:#1f7a4d;--room:#2b5fb4;color-scheme:light}
-@media (prefers-color-scheme:dark){:root{--bg:#0d1320;--card:#151d2e;--ink:#eceff5;--mu:#97a1b5;--line:#253049;--pri:#d3b06a;--pritx:#101626;--gold:#d3b06a;--soft:#1a2438;--sh:0 1px 2px rgba(0,0,0,.4);--cancel:#ef7b73;--resched:#e0aa4f;--extra:#4cc38a;--room:#7aa5f0;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0d1320;--card:#151d2e;--ink:#eceff5;--mu:#97a1b5;--line:#253049;--pri:#d3b06a;--pritx:#101626;--gold:#d3b06a;--soft:#1a2438;--sh:0 1px 2px rgba(0,0,0,.4);--cancel:#ef7b73;--resched:#e0aa4f;--extra:#4cc38a;--room:#7aa5f0;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1320;--card:#151d2e;--ink:#eceff5;--mu:#97a1b5;--line:#253049;--pri:#d3b06a;--pritx:#101626;--gold:#d3b06a;--soft:#1a2438;--sh:0 1px 2px rgba(0,0,0,.4);--cancel:#ef7b73;--resched:#e0aa4f;--extra:#4cc38a;--room:#7aa5f0;color-scheme:dark}}
 *{box-sizing:border-box}html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
 .serif{font-family:"Playfair Display",Georgia,"Times New Roman",serif}
@@ -69,6 +71,10 @@ button.rb small{margin-left:4px;color:var(--mu);font-weight:700}
 .lg{text-align:center;margin:0 auto 8px}.lg img{width:170px;max-width:60%;height:auto;opacity:.92}
 .hl{height:42px;width:auto;opacity:.92;display:block}
 .upd{border-left:4px solid var(--c)}.upd .mu{font-size:12px}
+.av{overflow:hidden}.av img{width:100%;height:100%;object-fit:cover;display:block}.av.big{width:76px;height:76px;font-size:28px;flex:0 0 auto}
+.tg{background:rgba(255,255,255,.14);color:#fff;width:36px;height:36px;border-radius:50%;padding:0;font-size:17px;line-height:1}
+.avb{background:none;padding:0;border-radius:50%}
+.btn{display:inline-block;border:1px solid var(--line);border-radius:11px;padding:8px 12px;font-weight:600;cursor:pointer;font-size:14px;margin-right:6px}
 </style></head><body><div id="app"><div class="empty">Loading…</div></div>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -82,7 +88,7 @@ const LG=`<div class="lg"><img src="${LOGO}" alt="CU MGT-39 Praesidium"></div>`;
 const DAY=864e5,ms=t=>t?.toMillis?t.toMillis():(typeof t==="number"?t:Date.now());
 const TYPES={cancel:"Class cancelled",resched:"Rescheduled",extra:"Extra class",room:"Room change"};
 const RL={student:"Student",cr:"CR",teacher:"Teacher",admin:"Admin"};
-const S={user:null,me:null,meLoaded:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],users:[],tab:"feed",editId:null,formOpen:false,q:"",stage:"load",unsubs:[],reqUnsub:[],reqRole:null,started:false,usersSub:false,shellKey:"",reacts:[],pickId:null,more:false,dataUnsubs:[],ptab:"active",updates:[]};
+const S={user:null,me:null,meLoaded:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],users:[],tab:"feed",editId:null,formOpen:false,q:"",stage:"load",unsubs:[],reqUnsub:[],reqRole:null,started:false,usersSub:false,shellKey:"",reacts:[],pickId:null,more:false,dataUnsubs:[],ptab:"active",updates:[],rtab:"live",pendPhoto:undefined};
 const $=s=>document.querySelector(s);
 const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const rich=t=>esc(t).replace(/@([a-z0-9_]{3,15})/gi,'<span class="mn">@$1</span>');
@@ -97,6 +103,7 @@ const empty=(a,b)=>`<div class="empty"><b>${a}</b>${b}</div>`;
 const init=n=>esc((n||"?").trim()[0]||"?").toUpperCase();
 const stat=u=>u.status||"approved";
 const prof=id=>S.profs.find(p=>p.id===id);
+const av=(id,name,cls="")=>{const ph=prof(id)?.photo;return `<div class="av ${cls}">${ph?`<img src="${esc(ph)}" alt="">`:init(name)}</div>`};
 const teachers=()=>S.profs.filter(p=>p.role==="teacher"||p.role==="admin").sort((a,b)=>a.nick.localeCompare(b.nick));
 const on=(list,q,fn)=>list.push(onSnapshot(q,fn,e=>console.warn("listen",e.code)));
 function mentionsOf(text){const out=new Set();(String(text).match(/@([a-z0-9_]{3,15})/gi)||[]).forEach(m=>{const p=S.profs.find(x=>x.nick===m.slice(1).toLowerCase()&&(x.role==="teacher"||x.role==="admin"));if(p)out.add(p.id)});return [...out]}
@@ -115,7 +122,8 @@ function screenRegister(){
   <label class="l">Nickname (short, unique)</label><input id="rk" placeholder="e.g. abrar" autocapitalize="none" autocomplete="off">
   <div class="mu" style="margin:-2px 2px 8px">Teachers will mention you as @nickname. Letters, numbers, underscore; 3–15 characters.</div>
   ${leg?"":`<label class="l">I am a</label><select id="rr"><option value="student">Student</option><option value="teacher">Teacher</option></select>
-  <div id="sidw"><label class="l">Student ID (optional, helps the admin identify you)</label><input id="rs" inputmode="numeric" placeholder="e.g. 2603021022"></div>`}
+  <div id="sidw"><label class="l">Student ID (optional, helps the admin identify you)</label><input id="rs" inputmode="numeric" placeholder="e.g. 2603021022"></div>
+  <label class="l">Mobile number (optional)</label><input id="rp" inputmode="tel" placeholder="e.g. 01XXXXXXXXX">`}
   <button id="sub" style="width:100%;margin-top:6px">${leg?"Save profile":"Submit for approval"}</button>
   <button class="g" id="out" style="width:100%;margin-top:8px">Sign out</button></div></div>`;
   $("#rr")&&($("#rr").onchange=e=>$("#sidw").style.display=e.target.value==="student"?"":"none");
@@ -132,7 +140,7 @@ function screenWait(){
 const IC={feed:'<path d="M5 4h14v16H5z M9 9h6 M9 13h6 M9 17h3"/>',reqs:'<path d="M4 5h16v11H10l-5 4v-4H4z"/>',people:'<path d="M9 11a3 3 0 100-6 3 3 0 000 6z M3 20c0-3.5 3-5.5 6-5.5s6 2 6 5.5 M16 6a3 3 0 010 5.5 M18 14.5c2 .6 3 2.2 3 5.5"/>',me:'<path d="M12 12a4 4 0 100-8 4 4 0 000 8z M4 21c0-4 4-6.5 8-6.5s8 2.5 8 6.5"/>'};
 function shell(){
   S.shellKey=role()+"|"+(S.prof?.nick||"");
-  $("#app").innerHTML=`<header class="hd"><div class="row1"><img class="hl" src="${LOGO}" alt="CU MGT-39"><div class="av">${init(S.me.name)}</div></div>
+  $("#app").innerHTML=`<header class="hd"><div class="row1"><img class="hl" src="${LOGO}" alt="CU MGT-39"><div style="display:flex;gap:10px;align-items:center"><button class="tg" data-tg="1" aria-label="Day or night mode">${themeNow()==="dark"?"☀":"☾"}</button><button class="avb" data-tab="me" aria-label="My profile">${av(S.user.uid,S.me.name)}</button></div></div>
   <div class="who">${esc(S.me.name)} · @${esc(S.prof?.nick||"")} · ${RL[role()]}</div></header>
   <main><div id="form"></div><div id="list"></div></main><nav class="bn"><div class="in" id="nav"></div></nav>`;
   renderNav();renderForm();renderList();
@@ -143,7 +151,7 @@ function renderNav(){
   if(isP()||isT())tabs.push(["reqs","Requests"]);
   if(isAdmin())tabs.push(["people","People"]);
   tabs.push(["me","Me"]);
-  const pend=S.reqs.filter(r=>r.status==="pending").length;
+  const pend=S.reqs.filter(r=>r.status==="pending"&&Date.now()-r.ts<DAY).length;
   $("#nav").innerHTML=tabs.map(([k,v])=>{const n=k==="people"?pendingCount():k==="reqs"&&isT()?pend:0;
     return `<button data-tab="${k}" class="${S.tab===k?"on":""}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>${v}${n?`<span class="dot">${n}</span>`:""}</button>`}).join("");
 }
@@ -175,7 +183,7 @@ function renderForm(){
 }
 function byBlock(n){
   const p=prof(n.byId);
-  return `<div class="by"><div class="av">${init(n.byName)}</div><div><div class="nm">${esc(p?.name||n.byName)}</div><div class="mu">@${esc(p?.nick||n.byNick||"")} · ${RL[p?.role||n.byRole]||""}</div></div></div>`;
+  return `<div class="by">${av(n.byId,n.byName)}<div><div class="nm">${esc(p?.name||n.byName)}</div><div class="mu">@${esc(p?.nick||n.byNick||"")} · ${RL[p?.role||n.byRole]||""}</div></div></div>`;
 }
 function nCard(n){
   const cnt=S.acks.filter(a=>a.n===n.id).length,mine=S.acks.some(a=>a.n===n.id&&a.uid===S.user.uid);
@@ -216,8 +224,8 @@ function rCard(r){
   const can=isT()&&st==="pending"&&(isAdmin()||(r.mentions||[]).includes(S.user.uid));
   return `<article class="card n" style="--c:var(--${col})"><div class="n-top"><span class="chip">${lbl}</span><span class="when">${fmtTs(r.ts)}</span></div>
   <h3>${esc(r.course)}</h3><div class="note">${rich(r.message)}</div><div class="mu">To ${to}</div>${byBlock(r)}
-  ${r.repBy?`<div class="mu" style="margin-top:6px">Asked ${fmtTs(r.ts)} · Answered by @${esc(r.repBy)}${r.answeredAt?" · "+fmtTs(at):""}</div>${isAdmin()?`<button class="g sm" style="margin-top:8px" data-proof="${esc(r.id)}">Copy proof</button>`:""}`:""}
-  ${can?`<div class="row" style="margin-top:10px"><button class="ok" data-rep="yes" data-id="${esc(r.id)}">Yes</button><button class="no" data-rep="no" data-id="${esc(r.id)}">No</button><button class="g" data-rep="later" data-id="${esc(r.id)}">Later</button></div>`:""}</article>`;
+  ${r.repBy?`<div class="mu" style="margin-top:6px">Asked ${fmtTs(r.ts)} · Answered by @${esc(r.repBy)}${r.answeredAt?" · "+fmtTs(at):""}</div>`:""}
+  ${can?`<div class="row" style="margin-top:10px"><button class="ok" data-rep="yes" data-id="${esc(r.id)}">Yes</button><button class="no" data-rep="no" data-id="${esc(r.id)}">No</button><button class="g" data-rep="later" data-id="${esc(r.id)}">Later</button></div>`:""}${isAdmin()?`<div class="row" style="margin-top:8px">${r.repBy?`<button class="g sm" data-proof="${esc(r.id)}">Copy proof</button>`:""}<button class="no sm" data-delreq="${esc(r.id)}">Delete</button></div>`:""}</article>`;
 }
 function uCard(u){
   const p=prof(u.id),st=stat(u),self=u.id===S.user.uid,nm=p?.name||u.name;
@@ -227,21 +235,23 @@ function uCard(u){
   else if(st==="approved")act=`${roleSel("rs_"+u.id,u.role,["student","cr","teacher","admin"])}${self?"":`<div class="row"><button class="g sm" data-block="${esc(u.id)}">Block</button><button class="no sm" data-remove="${esc(u.id)}">Remove</button></div>`}`;
   else act=`<div class="row"><button class="g sm" data-unblock="${esc(u.id)}">Unblock</button><button class="no sm" data-remove="${esc(u.id)}">Remove</button></div>`;
   return `<div class="card"><div class="top" style="display:flex;justify-content:space-between;gap:8px"><div><b>${esc(nm)}</b> <span class="mn">@${esc(p?.nick||"—")}</span></div><span class="pill">${st==="approved"?RL[u.role]:st}</span></div>
-  <div class="mu">${esc(u.email)}${u.sid?" · ID "+esc(u.sid):""}</div><div style="margin:8px 0 2px"><button class="g sm" data-editu="${esc(u.id)}">Edit name / nickname</button></div>${act}</div>`;
+  <div class="mu">${esc(u.email)}${u.sid?" · ID "+esc(u.sid):""}${u.phone?" · "+esc(u.phone):""}</div><div style="margin:8px 0 2px"><button class="g sm" data-editu="${esc(u.id)}">Edit name / nickname</button></div>${act}</div>`;
 }
 function renderList(){
   const l=$("#list");if(!l)return;
   const live=S.updates.filter(u=>Date.now()-ms(u.answeredAt)<DAY);
   if(S.tab==="feed")l.innerHTML=(live.length?`<h2>Class updates · last 24 hours</h2>`+live.map(uCardPub).join(""):"")+`<h2>Latest notices</h2>`+(S.notices.length?S.notices.map(nCard).join(""):empty("No notices yet","New class updates will appear here."));
-  else if(S.tab==="reqs"){const rs=[...S.reqs].sort((a,b)=>b.ts-a.ts);l.innerHTML=`<h2>Requests</h2>`+(rs.length?rs.map(rCard).join(""):empty("No requests","Requests that mention you will appear here."))}
+  else if(S.tab==="reqs"){const all=[...S.reqs].sort((a,b)=>b.ts-a.ts),liveR=all.filter(r=>Date.now()-r.ts<DAY),oldR=all.filter(r=>Date.now()-r.ts>=DAY),arch=isAdmin()&&S.rtab==="archive";
+    const seg=isAdmin()?`<div class="row" style="margin-bottom:6px"><button class="${arch?"g":""}" data-rtab="live">Last 24 hours (${liveR.length})</button><button class="${arch?"":"g"}" data-rtab="archive">Archive (${oldR.length})</button></div>`:"";
+    const show=arch?oldR:liveR;
+    l.innerHTML=seg+`<h2>${arch?"Archive · proof records":"Requests · removed automatically after 24 hours"}</h2>`+(show.length?show.map(rCard).join(""):empty(arch?"Archive is empty":"No requests",arch?"Requests older than 24 hours are kept here as proof.":"Requests that mention you will appear here."))}
   else if(S.tab==="people"){
     const q=S.q.toLowerCase(),us=S.users.filter(u=>((u.name||"")+" "+(prof(u.id)?.nick||"")+" "+(u.email||"")+" "+(u.sid||"")).toLowerCase().includes(q));
     const grp=(t,f)=>{const a=us.filter(u=>stat(u)===f);return a.length?`<h2>${t} (${a.length})</h2>`+a.map(uCard).join(""):""};
     const nb=S.users.filter(u=>stat(u)==="rejected").length,seg=`<div class="row" style="margin-bottom:6px"><button class="${S.ptab==="active"?"":"g"}" data-ptab="active">Active</button><button class="${S.ptab==="blocked"?"":"g"}" data-ptab="blocked">Blocked (${nb})</button></div>`;
     if(S.ptab==="blocked"){const a=us.filter(u=>stat(u)==="rejected");l.innerHTML=seg+`<h2>Block list (${a.length})</h2>`+(a.length?a.map(uCard).join(""):empty("No blocked users","People you block or reject appear here."))}
     else l.innerHTML=seg+(grp("Waiting for approval","pending")+grp("Members","approved")||empty("No users",""));
-  }else l.innerHTML=`<div class="card"><b class="serif" style="font-size:20px">${esc(S.me.name)}</b><div class="mu">@${esc(S.prof?.nick||"")} · ${RL[role()]}</div><div class="mu">${esc(S.me.email)}</div>${S.me.sid?`<div class="mu">ID ${esc(S.me.sid)}</div>`:""}
-  <button class="g" id="out2" style="margin-top:12px;width:100%">Sign out</button></div><div class="card mu">Push notifications will arrive in the next update. For now, open the app to see new notices.</div>`;
+  }else l.innerHTML=meHtml();
   $("#out2")&&($("#out2").onclick=()=>signOut(auth));
 }
 
@@ -253,7 +263,7 @@ async function submitReg(){
   const uid=S.user.uid,b=writeBatch(db);
   if(S.me)b.set(doc(db,"profiles",uid),{name,nick,role:S.me.role});
   else{const rr=$("#rr").value,sid=rr==="student"?($("#rs").value.trim()):"";
-    b.set(doc(db,"users",uid),{name,email:S.user.email,sid,role:"student",status:"pending",reqRole:rr,ts:Date.now()});
+    b.set(doc(db,"users",uid),{name,email:S.user.email,sid,role:"student",status:"pending",reqRole:rr,phone:($("#rp").value.trim()),ts:Date.now()});
     b.set(doc(db,"profiles",uid),{name,nick,role:"student"})}
   b.set(doc(db,"nicks",nick),{uid});
   $("#sub").disabled=true;
@@ -281,6 +291,44 @@ async function removeUser(id){
   S.acks.filter(a=>a.uid===id).forEach(a=>bb.delete(doc(db,"acks",a.n+"_"+id)));
   S.reacts.filter(r=>r.uid===id).forEach(r=>bb.delete(doc(db,"reactions",r.id)));
   await bb.commit();
+}
+const getTheme=()=>{try{return localStorage.getItem("mgt_theme")||"auto"}catch(e){return "auto"}};
+const themeNow=()=>document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");
+function setTheme(t){try{localStorage.setItem("mgt_theme",t)}catch(e){}if(t==="auto")document.documentElement.removeAttribute("data-theme");else document.documentElement.setAttribute("data-theme",t);const g=$(".tg");if(g)g.textContent=themeNow()==="dark"?"☀":"☾"}
+async function pickPhoto(file){
+  const img=new Image(),url=URL.createObjectURL(file);
+  await new Promise((ok,bad)=>{img.onload=ok;img.onerror=bad;img.src=url});
+  const c=document.createElement("canvas"),n=128;c.width=c.height=n;const m=Math.min(img.width,img.height);
+  c.getContext("2d").drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,n,n);URL.revokeObjectURL(url);
+  return c.toDataURL("image/jpeg",0.78);
+}
+function meHtml(){
+  const p=S.prof,u=S.me,th=getTheme(),ph=S.pendPhoto!==undefined?S.pendPhoto:(p?.photo||"");
+  return `<div class="card"><b class="serif" style="font-size:20px">My profile</b>
+  <div style="display:flex;align-items:center;gap:14px;margin:12px 0"><div class="av big" id="pp">${ph?`<img src="${esc(ph)}" alt="">`:init(u.name)}</div>
+  <div><label class="btn">Upload photo<input id="pf" type="file" accept="image/*" hidden></label>${ph?`<button class="g sm" data-rmphoto="1">Remove</button>`:""}<div class="mu" style="margin-top:6px">Tap Save changes after choosing.</div></div></div>
+  <label class="l">Full name (only the admin can change this)</label><input value="${esc(u.name)}" disabled>
+  <label class="l">Nickname</label><input id="mk" value="${esc(p?.nick||"")}" autocapitalize="none" autocomplete="off">
+  <label class="l">Student ID</label><input id="ms2" value="${esc(u.sid||"")}" inputmode="numeric">
+  <label class="l">Mobile number</label><input id="mp" value="${esc(u.phone||"")}" inputmode="tel">
+  <label class="l">Gmail</label><input value="${esc(u.email)}" disabled>
+  <button data-saveme="1" style="width:100%;margin-top:8px">Save changes</button></div>
+  <div class="card"><b>Appearance</b><div class="row" style="margin-top:8px">${[["auto","Auto"],["light","Day"],["dark","Night"]].map(([k,v])=>`<button class="${th===k?"":"g"}" data-theme="${k}">${v}</button>`).join("")}</div></div>
+  <button class="g" id="out2" style="width:100%">Sign out</button>
+  <div class="card mu" style="margin-top:12px">Push notifications will arrive in a later update. For now, open the app to see new notices.</div>`;
+}
+async function saveMe(){
+  const nick=$("#mk").value.trim().toLowerCase().replace(/^@/,""),sid=$("#ms2").value.trim(),phone=$("#mp").value.trim(),uid=S.user.uid,old=S.prof.nick;
+  if(!/^[a-z0-9_]{3,15}$/.test(nick))return alert("Nickname: 3-15 letters, numbers or underscore. No spaces.");
+  if(phone&&!/^[0-9+\-\s]{6,20}$/.test(phone))return alert("Enter a valid mobile number");
+  if(nick!==old&&S.profs.some(x=>x.nick===nick&&x.id!==uid))return alert("That nickname is already taken");
+  const bb=writeBatch(db),pu={};
+  if(nick!==old)pu.nick=nick;
+  if(S.pendPhoto!==undefined)pu.photo=S.pendPhoto;
+  if(Object.keys(pu).length)bb.update(doc(db,"profiles",uid),pu);
+  if(nick!==old){bb.delete(doc(db,"nicks",old));bb.set(doc(db,"nicks",nick),{uid})}
+  bb.update(doc(db,"users",uid),{sid,phone});
+  try{await bb.commit();S.pendPhoto=undefined;alert("Saved")}catch(e){alert(e.code==="permission-denied"?"Could not save. That nickname may be taken.":"Failed: "+(e.code||e.message))}
 }
 async function setRole(uid,r,extra){const b=writeBatch(db);b.update(doc(db,"users",uid),{role:r,...extra});b.update(doc(db,"profiles",uid),{role:r});await b.commit()}
 document.addEventListener("click",async e=>{
@@ -318,6 +366,12 @@ document.addEventListener("click",async e=>{
       bb.set(doc(db,"nicks",nick),{uid:d.editu});
       await bb.commit();
     }
+    else if(d.theme){setTheme(d.theme);document.querySelectorAll("button[data-theme]").forEach(x=>x.classList.toggle("g",x.dataset.theme!==d.theme))}
+    else if(d.tg)setTheme(themeNow()==="dark"?"light":"dark");
+    else if(d.saveme)await saveMe();
+    else if(d.rmphoto){S.pendPhoto="";const pp=$("#pp");if(pp)pp.innerHTML=init(S.me.name)}
+    else if(d.rtab){S.rtab=d.rtab;renderList()}
+    else if(d.delreq){if(await ask("Delete this request permanently? Its proof record will be lost too.")&&await ask("Are you sure? This cannot be undone.")){const bb=writeBatch(db);bb.delete(doc(db,"requests",d.delreq));bb.delete(doc(db,"updates",d.delreq));await bb.commit()}}
     else if(d.ptab){S.ptab=d.ptab;renderList()}
     else if(d.reject){if(await ask("Reject this request? The person will go to the Block list."))await updateDoc(doc(db,"users",d.reject),{status:"rejected"})}
     else if(d.block){const nm=nameOf(d.block);if(await ask(`Block ${nm}?`)&&await ask(`${nm} will lose access to all notices. Block now?`))await updateDoc(doc(db,"users",d.block),{status:"rejected"})}
@@ -329,12 +383,13 @@ document.addEventListener("click",async e=>{
   }catch(er){fail(er)}
 });
 document.addEventListener("change",async e=>{
+  if(e.target.id==="pf"){const f=e.target.files[0];if(!f)return;try{S.pendPhoto=await pickPhoto(f);const pp=$("#pp");if(pp)pp.innerHTML=`<img src="${S.pendPhoto}" alt="">`}catch(er){alert("Could not read that image")}return}
   const id=e.target.dataset?.role;if(!id||!e.target.id.startsWith("rs_"))return;
   try{await setRole(id,e.target.value,{})}catch(er){fail(er)}
 });
 
 /* ---------- state / routing ---------- */
-function stopAll(){[...S.unsubs,...S.dataUnsubs,...S.reqUnsub].forEach(f=>f());Object.assign(S,{unsubs:[],dataUnsubs:[],reqUnsub:[],started:false,usersSub:false,ptab:"active",me:null,meLoaded:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],reacts:[],updates:[],pickId:null,more:false,users:[],reqRole:null,tab:"feed",formOpen:false,editId:null,shellKey:""})}
+function stopAll(){[...S.unsubs,...S.dataUnsubs,...S.reqUnsub].forEach(f=>f());Object.assign(S,{unsubs:[],dataUnsubs:[],reqUnsub:[],started:false,usersSub:false,ptab:"active",pendPhoto:undefined,me:null,meLoaded:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],reacts:[],updates:[],pickId:null,more:false,users:[],reqRole:null,tab:"feed",formOpen:false,editId:null,shellKey:""})}
 function stopData(){[...S.dataUnsubs,...S.reqUnsub].forEach(f=>f());Object.assign(S,{dataUnsubs:[],reqUnsub:[],started:false,usersSub:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],reacts:[],updates:[],users:[],reqRole:null,shellKey:""})}
 function subReqs(){
   S.reqUnsub.forEach(f=>f());S.reqUnsub=[];S.reqRole=role();S.reqs=[];const c=collection(db,"requests"),u=S.user.uid;
@@ -370,7 +425,7 @@ function route(){
   S.stage=st;
   if(st==="login")screenLogin();else if(st==="register")screenRegister();else if(st==="wait")screenWait();else if(st==="app")shell();else $("#app").innerHTML='<div class="empty">Loading…</div>';
 }
-setInterval(()=>{if(S.stage==="app"&&S.tab==="feed")renderList()},60000);
+setInterval(()=>{if(S.stage==="app"&&["feed","reqs"].includes(S.tab)){renderNav();renderList()}},60000);
 onAuthStateChanged(auth,u=>{
   stopAll();S.user=u;
   if(!u){S.stage="";route();return}
