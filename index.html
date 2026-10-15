@@ -1,159 +1,293 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#2563eb">
+<meta name="theme-color" content="#14213d">
 <title>MGT-39</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f6f7fb;--card:#fff;--tx:#14171f;--mu:#6b7280;--bd:#e3e6ee;--ac:#2563eb;--ok:#16a34a;--no:#dc2626;--wn:#d97706;color-scheme:light}
-@media (prefers-color-scheme:dark){:root{--bg:#0f1218;--card:#181c25;--tx:#eef0f5;--mu:#98a0b0;--bd:#2a3040;--ac:#5b8cff;color-scheme:dark}}
+:root{--bg:#f4f1ea;--card:#fff;--ink:#14213d;--mu:#6b7280;--line:#e7e2d7;--pri:#14213d;--pritx:#fff;--gold:#b08a3e;--soft:#f8f6f0;--sh:0 1px 2px rgba(20,33,61,.06),0 10px 26px rgba(20,33,61,.07);--cancel:#b3261e;--resched:#b7791f;--extra:#1f7a4d;--room:#2b5fb4;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0d1320;--card:#151d2e;--ink:#eceff5;--mu:#97a1b5;--line:#253049;--pri:#d3b06a;--pritx:#101626;--gold:#d3b06a;--soft:#1a2438;--sh:0 1px 2px rgba(0,0,0,.4);--cancel:#ef7b73;--resched:#e0aa4f;--extra:#4cc38a;--room:#7aa5f0;color-scheme:dark}}
 *{box-sizing:border-box}html,body{margin:0}
-body{background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-main{max-width:560px;margin:0 auto;padding:14px 14px 40px}
-h1{font-size:22px;margin:6px 0 2px}h2{font-size:15px;margin:18px 0 8px}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.serif{font-family:"Playfair Display",Georgia,"Times New Roman",serif}
+header.hd{background:linear-gradient(135deg,#14213d 0%,#233a6b 100%);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 16px) 18px 22px;border-radius:0 0 22px 22px}
+.hd .row1{display:flex;justify-content:space-between;align-items:center;max-width:600px;margin:0 auto}
+.hd h1{font-size:26px;margin:0;letter-spacing:.5px}
+.hd .sub{font-size:11px;letter-spacing:1.6px;text-transform:uppercase;color:#d8bd85;margin-top:2px}
+.hd .who{max-width:600px;margin:14px auto 0;font-size:13px;color:#dfe5f3}
+.av{width:38px;height:38px;border-radius:50%;background:#d8bd85;color:#14213d;display:flex;align-items:center;justify-content:center;font-weight:700}
+main{max-width:600px;margin:0 auto;padding:16px 16px calc(96px + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:600px;margin:0 auto;padding:calc(env(safe-area-inset-top,0px) + 20px) 18px 40px}
+h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--mu);margin:22px 2px 10px;font-weight:600}
 .mu{color:var(--mu);font-size:13px}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px 14px;margin:10px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0;box-shadow:var(--sh)}
+label.l{display:block;font-size:12px;font-weight:600;color:var(--mu);margin:8px 2px 2px}
 input,select,textarea,button{font:inherit;color:inherit}
-input,select,textarea{width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);margin:4px 0 8px}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:var(--soft);margin:3px 0 6px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--gold)}
 .row{display:flex;gap:8px}.row>*{flex:1}
-button{border:0;border-radius:10px;padding:10px 14px;background:var(--ac);color:#fff;font-weight:600;cursor:pointer}
-button.g{background:transparent;color:var(--ac);border:1px solid var(--bd)}
-button.ok{background:var(--ok)}button.no{background:var(--no)}button:disabled{opacity:.6}
-.tabs{display:flex;gap:6px;margin:12px 0}.tabs button{flex:1;background:var(--card);color:var(--tx);border:1px solid var(--bd)}
-.tabs button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
-.tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px;color:#fff}
-.t-cancel{background:var(--no)}.t-resched{background:var(--wn)}.t-extra{background:var(--ok)}.t-room{background:var(--ac)}.t-pending{background:var(--wn)}
-.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.empty{text-align:center;color:var(--mu);padding:26px 0}
-</style></head><body><main id="app"><div class="empty">Loading…</div></main>
+button{border:0;border-radius:11px;padding:11px 16px;background:var(--pri);color:var(--pritx);font-weight:600;cursor:pointer}
+button.g{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button.ok{background:var(--extra);color:#fff}button.no{background:var(--cancel);color:#fff}button:disabled{opacity:.55}
+button.sm{padding:7px 11px;font-size:13px}
+nav.bn{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));z-index:5}
+nav.bn .in{display:flex;width:100%;max-width:600px}
+nav.bn button{flex:1;background:none;color:var(--mu);display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;padding:6px 4px;position:relative;border-radius:10px}
+nav.bn button.on{color:var(--pri)}nav.bn svg{width:23px;height:23px}
+.dot{position:absolute;top:2px;right:28%;background:var(--cancel);color:#fff;border-radius:99px;font-size:10px;min-width:16px;height:16px;line-height:16px;padding:0 4px}
+.n{border-left:4px solid var(--c,var(--room))}
+.n-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.chip{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--c);background:color-mix(in srgb,var(--c) 12%,transparent);padding:3px 9px;border-radius:99px}
+.when{font-size:12px;color:var(--mu)}
+.n h3{margin:8px 0 6px;font-size:19px;font-family:"Playfair Display",Georgia,serif}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0;padding:10px;background:var(--soft);border-radius:12px}
+.facts b{display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--mu);font-weight:600}
+.facts span{font-weight:600;font-size:14px}
+.note{color:var(--ink);opacity:.85;margin:6px 0}
+.mn{color:var(--gold);font-weight:700}
+.by{display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+.by .av{width:32px;height:32px;font-size:13px}.by .nm{font-weight:600;line-height:1.2}.by .mu{font-size:12px}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px}
+.pill{font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--soft);border:1px solid var(--line);color:var(--mu)}
+.pill.me{color:var(--gold);border-color:var(--gold)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 8px}
+.chipb{padding:5px 10px;border-radius:99px;background:var(--soft);border:1px solid var(--line);color:var(--ink);font-size:13px}
+.chipb small{color:var(--mu);margin-left:5px}
+.empty{text-align:center;color:var(--mu);padding:36px 10px}.empty b{display:block;color:var(--ink);font-family:"Playfair Display",Georgia,serif;font-size:18px;margin-bottom:4px}
+.hero{text-align:center;padding-top:8vh}.hero h1{font-size:40px;margin:8px 0}.hero p{color:var(--mu)}
+.logo{width:64px;height:64px;margin:0 auto;border-radius:18px;background:linear-gradient(135deg,#14213d,#233a6b);color:#d8bd85;display:flex;align-items:center;justify-content:center;font-size:28px}
+</style></head><body><div id="app"><div class="empty">Loading…</div></div>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,doc,getDoc,setDoc,updateDoc,deleteDoc,addDoc,collection,onSnapshot,query,orderBy,limit} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,doc,setDoc,updateDoc,deleteDoc,addDoc,collection,onSnapshot,query,orderBy,limit,where,writeBatch} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const app=initializeApp({
-  apiKey:"AIzaSyBlKJRh4tzKPBHYwMeVq4UqleA3y_aayG0",
-  authDomain:"mgt-39.firebaseapp.com",
-  projectId:"mgt-39",
-  storageBucket:"mgt-39.firebasestorage.app",
-  messagingSenderId:"737272189071",
-  appId:"1:737272189071:web:d0d362a17d0a1efa72a0fa"
-});
+const app=initializeApp({apiKey:"AIzaSyBlKJRh4tzKPBHYwMeVq4UqleA3y_aayG0",authDomain:"mgt-39.firebaseapp.com",projectId:"mgt-39",storageBucket:"mgt-39.firebasestorage.app",messagingSenderId:"737272189071",appId:"1:737272189071:web:d0d362a17d0a1efa72a0fa"});
 const auth=getAuth(app),db=getFirestore(app);
 const TYPES={cancel:"Class cancelled",resched:"Rescheduled",extra:"Extra class",room:"Room change"};
 const RL={student:"Student",cr:"CR",teacher:"Teacher",admin:"Admin"};
-const S={me:null,tab:"feed",notices:[],reqs:[],acks:[],users:[],editId:null,unsubs:[],usersSub:false};
+const S={user:null,me:null,meLoaded:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],users:[],tab:"feed",editId:null,formOpen:false,q:"",stage:"load",unsubs:[],reqUnsub:[],reqRole:null,started:false,usersSub:false,shellKey:""};
 const $=s=>document.querySelector(s);
 const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const fmt=ts=>new Date(ts).toLocaleString([],{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"});
-const isT=()=>S.me&&(S.me.role==="teacher"||S.me.role==="admin");
-const isCR=()=>S.me&&(S.me.role==="cr"||S.me.role==="admin");
-const fail=e=>alert("Failed: "+(e.code||e.message||e)+"\n(Check your role / internet.)");
+const rich=t=>esc(t).replace(/@([a-z0-9_]{3,15})/gi,'<span class="mn">@$1</span>');
+const fmtTs=ts=>new Date(ts).toLocaleString([],{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"});
+const fmtD=d=>d?new Date(d+"T00:00:00").toLocaleDateString([],{weekday:"short",day:"numeric",month:"short"}):"—";
+const fmtT=t=>t?new Date("1970-01-01T"+t).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}):"—";
+const role=()=>S.me?.role||"student";
+const isAdmin=()=>role()==="admin",isT=()=>["teacher","admin"].includes(role()),isCR=()=>["cr","admin"].includes(role()),isP=()=>["teacher","cr","admin"].includes(role());
+const fail=e=>alert("Failed: "+(e.code||e.message||e));
+const empty=(a,b)=>`<div class="empty"><b>${a}</b>${b}</div>`;
+const init=n=>esc((n||"?").trim()[0]||"?").toUpperCase();
+const stat=u=>u.status||"approved";
+const prof=id=>S.profs.find(p=>p.id===id);
+const teachers=()=>S.profs.filter(p=>p.role==="teacher"||p.role==="admin").sort((a,b)=>a.nick.localeCompare(b.nick));
+const on=(list,q,fn)=>list.push(onSnapshot(q,fn,e=>console.warn("listen",e.code)));
+function mentionsOf(text){const out=new Set();(String(text).match(/@([a-z0-9_]{3,15})/gi)||[]).forEach(m=>{const p=S.profs.find(x=>x.nick===m.slice(1).toLowerCase()&&(x.role==="teacher"||x.role==="admin"));if(p)out.add(p.id)});return [...out]}
 
-function login(msg){
-  $("#app").innerHTML=`<h1>MGT-39</h1><p class="mu">Class routine & notice board. Teachers post changes, CRs and students see them instantly.</p>
-  <div class="card"><button id="go" style="width:100%">Sign in with Google</button>${msg?`<p class="mu">${esc(msg)}</p>`:""}</div>`;
-  $("#go").onclick=async()=>{const p=new GoogleAuthProvider();try{await signInWithPopup(auth,p)}catch(e){if(e.code==="auth/popup-blocked"||e.code==="auth/operation-not-supported-in-this-environment")signInWithRedirect(auth,p);else if(e.code!=="auth/popup-closed-by-user")login("Sign-in failed: "+(e.code||e.message))}};
+/* ---------- screens ---------- */
+function screenLogin(msg){
+  $("#app").innerHTML=`<div class="wrap hero"><div class="logo serif">M</div><h1 class="serif">MGT-39</h1><p>Class routine &amp; notice board<br>Department of Management · University of Chittagong</p>
+  <div class="card"><button id="go" style="width:100%">Continue with Google</button><p class="mu" style="margin:10px 0 0">Use your Gmail. New members need admin approval.</p>${msg?`<p class="mu" style="color:var(--cancel)">${esc(msg)}</p>`:""}</div></div>`;
+  $("#go").onclick=async()=>{const p=new GoogleAuthProvider();try{await signInWithPopup(auth,p)}catch(e){if(["auth/popup-blocked","auth/operation-not-supported-in-this-environment"].includes(e.code))signInWithRedirect(auth,p);else if(e.code!=="auth/popup-closed-by-user")screenLogin("Sign-in failed: "+(e.code||e.message))}};
 }
-
-function shell(){
-  const t=S.me.role;
-  $("#app").innerHTML=`<div class="top"><div><h1>MGT-39</h1><div class="mu">${esc(S.me.name)} · ${RL[t]||t}</div></div><button class="g" id="out">Sign out</button></div>
-  <div class="tabs" id="tabs"></div><div id="form"></div><div id="list"></div>`;
+function screenRegister(){
+  const leg=!!S.me;
+  $("#app").innerHTML=`<div class="wrap"><div class="logo serif">M</div><h1 class="serif" style="text-align:center">${leg?"Complete your profile":"Join MGT-39"}</h1>
+  <p class="mu" style="text-align:center">Signed in as ${esc(S.user.email)}</p>
+  <div class="card"><label class="l">Full name</label><input id="rn" value="${esc(S.me?.name||S.user.displayName||"")}" placeholder="e.g. Abrar Faiyaaz">
+  <label class="l">Nickname (short, unique)</label><input id="rk" placeholder="e.g. abrar" autocapitalize="none" autocomplete="off">
+  <div class="mu" style="margin:-2px 2px 8px">Teachers will mention you as @nickname. Letters, numbers, underscore; 3–15 characters.</div>
+  ${leg?"":`<label class="l">I am a</label><select id="rr"><option value="student">Student</option><option value="teacher">Teacher</option></select>
+  <div id="sidw"><label class="l">Student ID (optional, helps the admin identify you)</label><input id="rs" inputmode="numeric" placeholder="e.g. 2603021022"></div>`}
+  <button id="sub" style="width:100%;margin-top:6px">${leg?"Save profile":"Submit for approval"}</button>
+  <button class="g" id="out" style="width:100%;margin-top:8px">Sign out</button></div></div>`;
+  $("#rr")&&($("#rr").onchange=e=>$("#sidw").style.display=e.target.value==="student"?"":"none");
+  $("#out").onclick=()=>signOut(auth);$("#sub").onclick=submitReg;
+}
+function screenWait(){
+  const rej=stat(S.me)==="rejected";
+  $("#app").innerHTML=`<div class="wrap hero"><div class="logo serif">${rej?"✕":"⏳"}</div><h1 class="serif" style="font-size:28px">${rej?"Access declined":"Waiting for approval"}</h1>
+  <p>${rej?"The admin has not approved this account. Please contact your class admin.":"Your request has been sent to the admin. You will get full access automatically once approved. You can keep this page open."}</p>
+  <div class="card" style="text-align:left"><b>${esc(S.me.name)}</b><div class="mu">${esc(S.me.email)}</div><div class="mu">Requested role: ${RL[S.me.reqRole]||"Student"}${S.me.sid?" · ID "+esc(S.me.sid):""}</div></div>
+  <button class="g" id="out">Sign out</button></div>`;
   $("#out").onclick=()=>signOut(auth);
-  renderTabs();renderForm();renderList();
 }
-function renderTabs(){
+const IC={feed:'<path d="M5 4h14v16H5z M9 9h6 M9 13h6 M9 17h3"/>',reqs:'<path d="M4 5h16v11H10l-5 4v-4H4z"/>',people:'<path d="M9 11a3 3 0 100-6 3 3 0 000 6z M3 20c0-3.5 3-5.5 6-5.5s6 2 6 5.5 M16 6a3 3 0 010 5.5 M18 14.5c2 .6 3 2.2 3 5.5"/>',me:'<path d="M12 12a4 4 0 100-8 4 4 0 000 8z M4 21c0-4 4-6.5 8-6.5s8 2.5 8 6.5"/>'};
+function shell(){
+  S.shellKey=role()+"|"+(S.prof?.nick||"");
+  $("#app").innerHTML=`<header class="hd"><div class="row1"><div><h1 class="serif">MGT-39</h1><div class="sub">Dept. of Management · CU</div></div><div class="av">${init(S.me.name)}</div></div>
+  <div class="who">${esc(S.me.name)} · @${esc(S.prof?.nick||"")} · ${RL[role()]}</div></header>
+  <main><div id="form"></div><div id="list"></div></main><nav class="bn"><div class="in" id="nav"></div></nav>`;
+  renderNav();renderForm();renderList();
+}
+function pendingCount(){return S.users.filter(u=>stat(u)==="pending").length}
+function renderNav(){
+  const tabs=[["feed","Notices"]];
+  if(isP()||isT())tabs.push(["reqs","Requests"]);
+  if(isAdmin())tabs.push(["people","People"]);
+  tabs.push(["me","Me"]);
   const pend=S.reqs.filter(r=>r.status==="pending").length;
-  const tabs=[["feed","Notices"],["reqs","Requests"+(isT()&&pend?" ●":"")]];
-  if(S.me.role==="admin")tabs.push(["users","Users"]);
-  $("#tabs").innerHTML=tabs.map(([k,v])=>`<button data-tab="${k}" class="${S.tab===k?"on":""}">${v}</button>`).join("");
+  $("#nav").innerHTML=tabs.map(([k,v])=>{const n=k==="people"?pendingCount():k==="reqs"&&isT()?pend:0;
+    return `<button data-tab="${k}" class="${S.tab===k?"on":""}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>${v}${n?`<span class="dot">${n}</span>`:""}</button>`}).join("");
 }
+function chips(target){return `<div class="mu" style="margin:0 2px 4px">Tap to mention a teacher:</div><div class="chips">${teachers().map(p=>`<button type="button" class="chipb" data-ins="@${esc(p.nick)}" data-t="${target}">@${esc(p.nick)}<small>${esc(p.name)}</small></button>`).join("")||'<span class="mu">No teachers yet.</span>'}</div>`}
 function renderForm(){
   const f=$("#form");if(!f)return;
-  if(S.tab==="feed"&&isT()){
+  if(S.tab==="feed"&&isP()){
     const n=S.editId?S.notices.find(x=>x.id===S.editId):null;
-    f.innerHTML=`<div class="card"><b>${n?"Edit notice":"Post a notice"}</b>
-    <input id="c" placeholder="Course (e.g. BCC-104)" value="${esc(n?.course)}">
-    <select id="ty">${Object.entries(TYPES).map(([k,v])=>`<option value="${k}" ${n?.type===k?"selected":""}>${v}</option>`).join("")}</select>
-    <div class="row"><input id="d" type="date" value="${esc(n?.date)}"><input id="tm" type="time" value="${esc(n?.time)}"></div>
-    <input id="rm" placeholder="Room (optional)" value="${esc(n?.room)}"><textarea id="nt" rows="2" placeholder="Note (optional)">${esc(n?.note)}</textarea>
-    <div class="row"><button id="post">${n?"Save changes":"Send to all"}</button>${n?`<button class="g" id="cx">Cancel</button>`:""}</div></div>`;
-    $("#post").onclick=postNotice;if(n)$("#cx").onclick=()=>{S.editId=null;renderForm()};
+    if(!n&&!S.formOpen){f.innerHTML=`<button id="open" style="width:100%">＋ New notice</button>`;$("#open").onclick=()=>{S.formOpen=true;renderForm()};return}
+    f.innerHTML=`<div class="card"><b class="serif" style="font-size:18px">${n?"Edit notice":"New notice"}</b>
+    <label class="l">Course</label><input id="c" placeholder="e.g. BCC-104" value="${esc(n?.course)}">
+    <label class="l">Type</label><select id="ty">${Object.entries(TYPES).map(([k,v])=>`<option value="${k}" ${n?.type===k?"selected":""}>${v}</option>`).join("")}</select>
+    <div class="row"><div><label class="l">Date</label><input id="d" type="date" value="${esc(n?.date)}"></div><div><label class="l">Time</label><input id="tm" type="time" value="${esc(n?.time)}"></div></div>
+    <label class="l">Room (optional)</label><input id="rm" value="${esc(n?.room)}">
+    <label class="l">Note (optional)</label><textarea id="nt" rows="2">${esc(n?.note)}</textarea>${chips("nt")}
+    <div class="mu" style="margin-bottom:8px">${isT()?"This notice goes to everyone.":"Students get this notice. A teacher is notified only if you @mention them."}</div>
+    <div class="row"><button id="post">${n?"Save changes":"Publish"}</button><button class="g" id="cx">Cancel</button></div></div>`;
+    $("#post").onclick=postNotice;$("#cx").onclick=()=>{S.editId=null;S.formOpen=false;renderForm()};
   }else if(S.tab==="reqs"&&isCR()){
-    f.innerHTML=`<div class="card"><b>Ask a teacher</b><input id="c" placeholder="Course / teacher"><textarea id="ms" rows="2" placeholder="e.g. Will tomorrow's class be held?"></textarea><button id="ask" style="width:100%">Send request</button></div>`;
-    $("#ask").onclick=askReq;
+    if(!S.formOpen){f.innerHTML=`<button id="open" style="width:100%">＋ Ask a teacher</button>`;$("#open").onclick=()=>{S.formOpen=true;renderForm()};return}
+    f.innerHTML=`<div class="card"><b class="serif" style="font-size:18px">Ask a teacher</b>
+    <label class="l">Course</label><input id="c" placeholder="e.g. BCC-104">
+    <label class="l">Message (mention at least one teacher)</label><textarea id="ms" rows="2" placeholder="@nickname Sir, will tomorrow's class be held?"></textarea>${chips("ms")}
+    <div class="row"><button id="ask">Send</button><button class="g" id="cx">Cancel</button></div></div>`;
+    $("#ask").onclick=askReq;$("#cx").onclick=()=>{S.formOpen=false;renderForm()};
+  }else if(S.tab==="people"){
+    f.innerHTML=`<input id="uq" placeholder="Search name, nickname, email or ID" value="${esc(S.q)}">`;$("#uq").oninput=e=>{S.q=e.target.value;renderList()};
   }else f.innerHTML="";
+}
+function byBlock(n){
+  const p=prof(n.byId);
+  return `<div class="by"><div class="av">${init(n.byName)}</div><div><div class="nm">${esc(n.byName)}</div><div class="mu">@${esc(n.byNick||p?.nick||"")} · ${RL[p?.role||n.byRole]||""}</div></div></div>`;
+}
+function nCard(n){
+  const cnt=S.acks.filter(a=>a.n===n.id).length,mine=S.acks.some(a=>a.n===n.id&&a.uid===S.user.uid);
+  const own=isP()&&(n.byId===S.user.uid||isAdmin()),ment=(n.mentions||[]).includes(S.user.uid);
+  const tos=(n.mentions||[]).map(id=>prof(id)?.nick).filter(Boolean);
+  return `<article class="card n" style="--c:var(--${esc(n.type)})"><div class="n-top"><span class="chip">${esc(TYPES[n.type]||n.type)}</span><span class="when">${fmtTs(n.ts)}</span></div>
+  <h3>${esc(n.course)}</h3><div class="facts"><div><b>Date</b><span>${fmtD(n.date)}</span></div><div><b>Time</b><span>${fmtT(n.time)}</span></div><div><b>Room</b><span>${esc(n.room)||"—"}</span></div></div>
+  ${n.note?`<div class="note">${rich(n.note)}</div>`:""}${byBlock(n)}
+  <div class="foot"><span class="pill ${ment?"me":""}">${ment?"Mentions you":"✔ "+cnt+" seen"}${tos.length&&!ment?" · to "+tos.map(t=>"@"+esc(t)).join(" "):""}</span><span class="row">
+  ${own?`<button class="g sm" data-edit="${esc(n.id)}">Edit</button><button class="g sm" data-del="${esc(n.id)}">Delete</button>`:""}
+  ${!isT()&&n.byId!==S.user.uid?`<button class="sm ${mine?"g":""}" data-seen="${esc(n.id)}" ${mine?"disabled":""}>${mine?"Seen ✔":"Mark seen"}</button>`:""}</span></div></article>`;
+}
+function rCard(r){
+  const st=r.status||"pending",lbl={pending:"Waiting",yes:"Class will be held",no:"Class cancelled",later:"Will reschedule"}[st],col=st==="pending"?"resched":st==="yes"?"extra":"cancel";
+  const to=(r.mentions||[]).map(id=>"@"+esc(prof(id)?.nick||"?")).join(" ");
+  const can=isT()&&st==="pending"&&(isAdmin()||(r.mentions||[]).includes(S.user.uid));
+  return `<article class="card n" style="--c:var(--${col})"><div class="n-top"><span class="chip">${lbl}</span><span class="when">${fmtTs(r.ts)}</span></div>
+  <h3>${esc(r.course)}</h3><div class="note">${rich(r.message)}</div><div class="mu">To ${to}</div>${byBlock(r)}
+  ${r.repBy?`<div class="mu" style="margin-top:6px">Answered by @${esc(r.repBy)}</div>`:""}
+  ${can?`<div class="row" style="margin-top:10px"><button class="ok" data-rep="yes" data-id="${esc(r.id)}">Yes</button><button class="no" data-rep="no" data-id="${esc(r.id)}">No</button><button class="g" data-rep="later" data-id="${esc(r.id)}">Later</button></div>`:""}</article>`;
+}
+function uCard(u){
+  const p=prof(u.id),st=stat(u),self=u.id===S.user.uid,nm=p?.name||u.name;
+  const roleSel=(id,val,opts)=>`<select id="${id}" data-role="${esc(u.id)}" ${self?"disabled":""}>${opts.map(k=>`<option value="${k}" ${val===k?"selected":""}>${RL[k]}</option>`).join("")}</select>`;
+  let act="";
+  if(st==="pending")act=`<label class="l">Approve as</label>${roleSel("ar_"+u.id,u.reqRole||"student",["student","teacher","cr"])}<div class="row"><button class="ok sm" data-approve="${esc(u.id)}">Approve</button><button class="no sm" data-reject="${esc(u.id)}">Reject</button></div>`;
+  else if(st==="approved")act=`<div class="row">${roleSel("rs_"+u.id,u.role,["student","cr","teacher","admin"])}${self?"":`<button class="g sm" data-block="${esc(u.id)}">Block</button>`}</div>`;
+  else act=`<button class="g sm" data-approve="${esc(u.id)}">Restore access</button>`;
+  return `<div class="card"><div class="top" style="display:flex;justify-content:space-between;gap:8px"><div><b>${esc(nm)}</b> <span class="mn">@${esc(p?.nick||"—")}</span></div><span class="pill">${st==="approved"?RL[u.role]:st}</span></div>
+  <div class="mu">${esc(u.email)}${u.sid?" · ID "+esc(u.sid):""}</div>${act}</div>`;
 }
 function renderList(){
   const l=$("#list");if(!l)return;
-  if(S.tab==="feed")l.innerHTML=`<h2>Latest</h2>`+(S.notices.length?S.notices.map(nCard).join(""):`<div class="empty">No notices yet.</div>`);
-  else if(S.tab==="reqs")l.innerHTML=`<h2>Requests</h2>`+(S.reqs.length?S.reqs.map(rCard).join(""):`<div class="empty">No requests.</div>`);
-  else l.innerHTML=`<h2>Users (${S.users.length})</h2><p class="mu">New sign-ins start as Student. Set Teacher / CR here.</p>`+S.users.map(u=>`<div class="card"><b>${esc(u.name)}</b><div class="mu">${esc(u.email)}</div>
-    <select data-role="${esc(u.id)}" ${u.id===S.me.uid?"disabled":""}>${Object.entries(RL).map(([k,v])=>`<option value="${k}" ${u.role===k?"selected":""}>${v}</option>`).join("")}</select></div>`).join("");
-}
-function nCard(n){
-  const cnt=S.acks.filter(a=>a.n===n.id).length,mine=S.acks.some(a=>a.n===n.id&&a.uid===S.me.uid);
-  const own=isT()&&(n.byId===S.me.uid||S.me.role==="admin");
-  return `<div class="card"><div class="top"><span class="tag t-${esc(n.type)}">${esc(TYPES[n.type]||n.type)}</span><span class="mu">${fmt(n.ts)}</span></div>
-  <div style="margin-top:6px"><b>${esc(n.course)}</b> · ${esc(n.byName)}</div>
-  <div>${n.date?`📅 ${esc(n.date)} `:""}${n.time?`🕒 ${esc(n.time)} `:""}${n.room?`📍 ${esc(n.room)}`:""}</div>
-  ${n.note?`<div class="mu">${esc(n.note)}</div>`:""}
-  <div class="top" style="margin-top:8px"><span class="mu">✔ ${cnt} seen</span><span class="row">
-  ${own?`<button class="g" data-edit="${esc(n.id)}">Edit</button><button class="g" data-del="${esc(n.id)}">Delete</button>`:""}
-  ${!isT()?`<button class="${mine?"g":""}" data-seen="${esc(n.id)}" ${mine?"disabled":""}>${mine?"Seen ✔":"Mark seen"}</button>`:""}</span></div></div>`;
-}
-function rCard(r){
-  const st=r.status||"pending",lbl={pending:"Waiting",yes:"Class will be held",no:"Class cancelled",later:"Will reschedule"}[st];
-  const act=isT()&&st==="pending"?`<div class="row" style="margin-top:8px"><button class="ok" data-rep="yes" data-id="${esc(r.id)}">Yes</button><button class="no" data-rep="no" data-id="${esc(r.id)}">No</button><button class="g" data-rep="later" data-id="${esc(r.id)}">Later</button></div>`:"";
-  return `<div class="card"><div class="top"><b>${esc(r.course)}</b><span class="tag ${st==="pending"?"t-pending":st==="yes"?"t-extra":"t-cancel"}">${lbl}</span></div>
-  <div>${esc(r.message)}</div><div class="mu">from ${esc(r.byName)} · ${fmt(r.ts)}${r.repBy?` · answered by ${esc(r.repBy)}`:""}</div>${act}</div>`;
+  if(S.tab==="feed")l.innerHTML=`<h2>Latest notices</h2>`+(S.notices.length?S.notices.map(nCard).join(""):empty("No notices yet","New class updates will appear here."));
+  else if(S.tab==="reqs"){const rs=[...S.reqs].sort((a,b)=>b.ts-a.ts);l.innerHTML=`<h2>Requests</h2>`+(rs.length?rs.map(rCard).join(""):empty("No requests","Requests that mention you will appear here."))}
+  else if(S.tab==="people"){
+    const q=S.q.toLowerCase(),us=S.users.filter(u=>((u.name||"")+" "+(prof(u.id)?.nick||"")+" "+(u.email||"")+" "+(u.sid||"")).toLowerCase().includes(q));
+    const grp=(t,f)=>{const a=us.filter(u=>stat(u)===f);return a.length?`<h2>${t} (${a.length})</h2>`+a.map(uCard).join(""):""};
+    l.innerHTML=grp("Waiting for approval","pending")+grp("Members","approved")+grp("Blocked","rejected")||empty("No users","");
+  }else l.innerHTML=`<div class="card"><b class="serif" style="font-size:20px">${esc(S.me.name)}</b><div class="mu">@${esc(S.prof?.nick||"")} · ${RL[role()]}</div><div class="mu">${esc(S.me.email)}</div>${S.me.sid?`<div class="mu">ID ${esc(S.me.sid)}</div>`:""}
+  <button class="g" id="out2" style="margin-top:12px;width:100%">Sign out</button></div><div class="card mu">Push notifications will arrive in the next update. For now, open the app to see new notices.</div>`;
+  $("#out2")&&($("#out2").onclick=()=>signOut(auth));
 }
 
+/* ---------- actions ---------- */
+async function submitReg(){
+  const name=$("#rn").value.trim(),nick=$("#rk").value.trim().toLowerCase().replace(/^@/,"");
+  if(name.length<3)return alert("Enter your full name");
+  if(!/^[a-z0-9_]{3,15}$/.test(nick))return alert("Nickname: 3–15 letters, numbers or underscore. No spaces.");
+  const uid=S.user.uid,b=writeBatch(db);
+  if(S.me)b.set(doc(db,"profiles",uid),{name,nick,role:S.me.role});
+  else{const rr=$("#rr").value,sid=rr==="student"?($("#rs").value.trim()):"";
+    b.set(doc(db,"users",uid),{name,email:S.user.email,sid,role:"student",status:"pending",reqRole:rr,ts:Date.now()});
+    b.set(doc(db,"profiles",uid),{name,nick,role:"student"})}
+  b.set(doc(db,"nicks",nick),{uid});
+  $("#sub").disabled=true;
+  try{await b.commit()}catch(e){$("#sub").disabled=false;alert(e.code==="permission-denied"?"That nickname is already taken. Try another.":"Failed: "+(e.code||e.message))}
+}
 async function postNotice(){
-  const c=$("#c").value.trim();if(!c){alert("Enter the course");return}
-  const data={course:c,type:$("#ty").value,date:$("#d").value,time:$("#tm").value,room:$("#rm").value.trim(),note:$("#nt").value.trim()};
+  const c=$("#c").value.trim();if(!c)return alert("Enter the course");
+  const note=$("#nt").value.trim(),data={course:c,type:$("#ty").value,date:$("#d").value,time:$("#tm").value,room:$("#rm").value.trim(),note,mentions:mentionsOf(note)};
   try{
-    if(S.editId){await updateDoc(doc(db,"notices",S.editId),data);S.editId=null}
-    else await addDoc(collection(db,"notices"),{...data,byName:S.me.name,byId:S.me.uid,ts:Date.now()});
-    renderForm();
+    if(S.editId)await updateDoc(doc(db,"notices",S.editId),data);
+    else await addDoc(collection(db,"notices"),{...data,byId:S.user.uid,byName:S.me.name,byNick:S.prof.nick,byRole:role(),push:isT()?"all":"students",ts:Date.now()});
+    S.editId=null;S.formOpen=false;renderForm();
   }catch(e){fail(e)}
 }
 async function askReq(){
-  const c=$("#c").value.trim(),m=$("#ms").value.trim();if(!c||!m)return;
-  try{await addDoc(collection(db,"requests"),{course:c,message:m,byName:S.me.name,byId:S.me.uid,ts:Date.now(),status:"pending"});$("#c").value=$("#ms").value=""}catch(e){fail(e)}
+  const c=$("#c").value.trim(),m=$("#ms").value.trim(),men=mentionsOf(m);
+  if(!c||!m)return alert("Fill in course and message");
+  if(!men.length)return alert("Mention at least one teacher, e.g. tap a name below the message.");
+  try{await addDoc(collection(db,"requests"),{course:c,message:m,mentions:men,byId:S.user.uid,byName:S.me.name,byNick:S.prof.nick,byRole:role(),status:"pending",ts:Date.now()});S.formOpen=false;renderForm()}catch(e){fail(e)}
 }
+async function setRole(uid,r,extra){const b=writeBatch(db);b.update(doc(db,"users",uid),{role:r,...extra});b.update(doc(db,"profiles",uid),{role:r});await b.commit()}
 document.addEventListener("click",async e=>{
-  const b=e.target.closest("button");if(!b||!S.me)return;const d=b.dataset;
+  const b=e.target.closest("button");if(!b||S.stage!=="app")return;const d=b.dataset;
   try{
-    if(d.tab){S.tab=d.tab;S.editId=null;renderTabs();renderForm();renderList()}
+    if(d.tab){S.tab=d.tab;S.editId=null;S.formOpen=false;renderNav();renderForm();renderList();scrollTo(0,0)}
+    else if(d.ins){const t=$("#"+d.t);t.value+=(t.value&&!/\s$/.test(t.value)?" ":"")+d.ins+" ";t.focus()}
     else if(d.edit){S.editId=d.edit;renderForm();scrollTo(0,0)}
     else if(d.del){if(confirm("Delete this notice?"))await deleteDoc(doc(db,"notices",d.del))}
-    else if(d.seen){await setDoc(doc(db,"acks",d.seen+"_"+S.me.uid),{n:d.seen,uid:S.me.uid,name:S.me.name,ts:Date.now()})}
-    else if(d.rep){await updateDoc(doc(db,"requests",d.id),{status:d.rep,repBy:S.me.name})}
+    else if(d.seen)await setDoc(doc(db,"acks",d.seen+"_"+S.user.uid),{n:d.seen,uid:S.user.uid,name:S.me.name,ts:Date.now()});
+    else if(d.rep)await updateDoc(doc(db,"requests",d.id),{status:d.rep,repBy:S.prof.nick});
+    else if(d.approve){const r=$("#ar_"+d.approve)?.value;await setRole(d.approve,r||S.users.find(u=>u.id===d.approve)?.role||"student",{status:"approved"})}
+    else if(d.reject||d.block)await updateDoc(doc(db,"users",d.reject||d.block),{status:"rejected"});
   }catch(er){fail(er)}
 });
 document.addEventListener("change",async e=>{
-  const id=e.target.dataset?.role;if(!id)return;
-  try{await updateDoc(doc(db,"users",id),{role:e.target.value})}catch(er){fail(er)}
+  const id=e.target.dataset?.role;if(!id||!e.target.id.startsWith("rs_"))return;
+  try{await setRole(id,e.target.value,{})}catch(er){fail(er)}
 });
 
-function stop(){S.unsubs.forEach(f=>f());S.unsubs=[];S.usersSub=false;S.me=null}
-onAuthStateChanged(auth,async u=>{
-  stop();
-  if(!u){login();return}
-  try{
-    const ref=doc(db,"users",u.uid);
-    if(!(await getDoc(ref)).exists())await setDoc(ref,{name:u.displayName||u.email,email:u.email,role:"student",ts:Date.now()});
-    const on=(q,fn)=>S.unsubs.push(onSnapshot(q,fn,e=>console.error(e)));
-    let first=true;
-    on(ref,s=>{
-      const was=S.me?.role;S.me={uid:u.uid,...s.data()};
-      if(S.me.role==="admin"&&!S.usersSub){S.usersSub=true;on(query(collection(db,"users"),limit(300)),x=>{S.users=x.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.name||"").localeCompare(b.name||""));if(S.tab==="users")renderList()})}
-      if(first||was!==S.me.role){first=false;shell()}
-    });
-    on(query(collection(db,"notices"),orderBy("ts","desc"),limit(60)),x=>{S.notices=x.docs.map(d=>({id:d.id,...d.data()}));if(S.me)renderList()});
-    on(query(collection(db,"requests"),orderBy("ts","desc"),limit(60)),x=>{S.reqs=x.docs.map(d=>({id:d.id,...d.data()}));if(S.me){renderTabs();renderList()}});
-    on(collection(db,"acks"),x=>{S.acks=x.docs.map(d=>d.data());if(S.me)renderList()});
-  }catch(e){login("Error: "+(e.code||e.message))}
+/* ---------- state / routing ---------- */
+function stopAll(){[...S.unsubs,...S.reqUnsub].forEach(f=>f());Object.assign(S,{unsubs:[],reqUnsub:[],started:false,usersSub:false,me:null,meLoaded:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],users:[],reqRole:null,tab:"feed",formOpen:false,editId:null,shellKey:""})}
+function subReqs(){
+  S.reqUnsub.forEach(f=>f());S.reqUnsub=[];S.reqRole=role();S.reqs=[];const c=collection(db,"requests"),u=S.user.uid;
+  const cb=x=>{S.reqs=x.docs.map(d=>({id:d.id,...d.data()}));if(S.stage==="app"){renderNav();if(S.tab==="reqs")renderList()}};
+  if(isAdmin())on(S.reqUnsub,query(c,orderBy("ts","desc"),limit(80)),cb);
+  else if(role()==="teacher")on(S.reqUnsub,query(c,where("mentions","array-contains",u),limit(80)),cb);
+  else if(role()==="cr")on(S.reqUnsub,query(c,where("byId","==",u),limit(80)),cb);
+}
+function startApp(){
+  if(!S.started){S.started=true;
+    on(S.unsubs,collection(db,"profiles"),x=>{S.profs=x.docs.map(d=>({id:d.id,...d.data()}));S.profsLoaded=true;S.prof=prof(S.user.uid)||null;route()});
+    on(S.unsubs,query(collection(db,"notices"),orderBy("ts","desc"),limit(60)),x=>{S.notices=x.docs.map(d=>({id:d.id,...d.data()}));refresh()});
+    on(S.unsubs,collection(db,"acks"),x=>{S.acks=x.docs.map(d=>d.data());refresh()});
+  }
+  if(S.reqRole!==role())subReqs();
+  if(isAdmin()&&!S.usersSub){S.usersSub=true;on(S.unsubs,query(collection(db,"users"),limit(400)),x=>{S.users=x.docs.map(d=>({id:d.id,...d.data()}));refresh()})}
+}
+function refresh(){if(S.stage!=="app")return;renderNav();if(S.tab!=="me")renderList()}
+function route(){
+  let st;
+  if(!S.user)st="login";
+  else if(!S.meLoaded)st="load";
+  else if(!S.me)st="register";
+  else{const s=stat(S.me);
+    if(s==="pending"||s==="rejected")st="wait";
+    else{startApp();st=!S.profsLoaded?"load":!S.prof?"register":"app"}}
+  const key=st+"|"+(S.me?stat(S.me)+role():"")+"|"+(S.prof?.nick||"");
+  if(st==="app"&&S.stage==="app"){if(S.shellKey!==role()+"|"+(S.prof?.nick||"")){if(S.reqRole!==role())subReqs();shell()}else refresh();return}
+  S.stage=st;
+  if(st==="login")screenLogin();else if(st==="register")screenRegister();else if(st==="wait")screenWait();else if(st==="app")shell();else $("#app").innerHTML='<div class="empty">Loading…</div>';
+}
+onAuthStateChanged(auth,u=>{
+  stopAll();S.user=u;
+  if(!u){S.stage="";route();return}
+  S.stage="load";route();
+  on(S.unsubs,doc(db,"users",u.uid),s=>{S.meLoaded=true;S.me=s.exists()?{uid:u.uid,...s.data()}:null;route()});
 });
 </script></body></html>
