@@ -1,5 +1,5 @@
 // MGT-39 service worker v2: caches Firebase SDK + fonts (fast repeat loads), app files network-first with a 3s timeout.
-const C="mgt39-v2";
+const C="mgt39-v3";
 const LIB=/^https:\/\/(www\.gstatic\.com\/firebasejs|fonts\.(googleapis|gstatic)\.com)\//;
 self.addEventListener("install",e=>self.skipWaiting());
 self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
