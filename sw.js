@@ -1,4 +1,6 @@
-// MGT-39 service worker v3: caches Firebase SDK + fonts; app files open instantly from cache and refresh in the background (a Refresh bar appears when a new version is ready).
+// MGT-39 service worker v4: Firebase SDK + fonts are cached (fast repeat loads).
+// App files are ALWAYS fetched fresh from the server (HTTP cache bypassed), so a new upload shows up straight away.
+// The cached copy is only used when the phone is offline.
 const C="mgt39-v4";
 const LIB=/^https:\/\/(www\.gstatic\.com\/firebasejs|fonts\.(googleapis|gstatic)\.com)\//;
 self.addEventListener("install",e=>self.skipWaiting());
@@ -10,16 +12,6 @@ self.addEventListener("fetch",e=>{
     return;
   }
   if(new URL(r.url).origin!==location.origin)return;
-  e.respondWith((async()=>{
-    const c=await caches.open(C),m=await c.match(r);
-    const upd=fetch(r).then(async res=>{
-      if(res.ok){
-        if(m&&r.mode==="navigate"){const [a,b]=await Promise.all([m.clone().text(),res.clone().text()]);if(a!==b){await c.put(r,res.clone());(await self.clients.matchAll()).forEach(k=>k.postMessage("upd"))}}
-        else await c.put(r,res.clone());
-      }
-      return res;
-    });
-    if(m){e.waitUntil(upd.catch(()=>{}));return m}
-    try{return await upd}catch(err){return (await c.match("./"))||Response.error()}
-  })());
+  const net=new Promise((ok,bad)=>{const t=setTimeout(()=>bad("timeout"),5000);fetch(r.url,{cache:"no-store",credentials:"same-origin"}).then(res=>{clearTimeout(t);ok(res)},err=>{clearTimeout(t);bad(err)})});
+  e.respondWith(net.then(res=>{if(res.ok){const cp=res.clone();caches.open(C).then(c=>c.put(r,cp))}return res}).catch(()=>caches.match(r,{ignoreSearch:true}).then(m=>m||caches.match("./"))));
 });
