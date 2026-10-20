@@ -1,12 +1,12 @@
 // MGT-39 service worker v4: Firebase SDK + fonts are cached (fast repeat loads).
 // App files are ALWAYS fetched fresh from the server (HTTP cache bypassed), so a new upload shows up straight away.
 // The cached copy is only used when the phone is offline.
-const C="mgt39-v4";
+const C="mgt39-v5";
 const LIB=/^https:\/\/(www\.gstatic\.com\/firebasejs|fonts\.(googleapis|gstatic)\.com)\//;
 self.addEventListener("install",e=>self.skipWaiting());
 self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
 self.addEventListener("fetch",e=>{
-  const r=e.request;if(r.method!=="GET")return;
+  const r=e.request;if(r.method!=="GET"||/\.mp4(\?|$)/.test(r.url))return;
   if(LIB.test(r.url)){
     e.respondWith(caches.match(r).then(m=>m||fetch(r).then(res=>{if(res.ok){const cp=res.clone();caches.open(C).then(c=>c.put(r,cp))}return res})));
     return;
