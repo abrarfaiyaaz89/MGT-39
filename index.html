@@ -242,6 +242,7 @@ button.bmore{position:absolute;top:4px;right:4px;width:28px;height:28px;padding:
 .updbar{position:fixed;left:12px;right:12px;bottom:calc(72px + env(safe-area-inset-bottom,0px));max-width:560px;margin:0 auto;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--ink);color:var(--bg);border-radius:14px;padding:10px 10px 10px 16px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-weight:600}
 .updbar button{height:36px;padding:0 14px;background:var(--bg);color:var(--ink);border-radius:10px;box-shadow:none}
 .t-general{--c:var(--pri);--cb:var(--prisoft)}
+.t-exam{--c:#8a5cc7;--cb:rgba(138,92,199,.15)}.t-deadline{--c:#d0661f;--cb:rgba(208,102,31,.15)}
 .ntop{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.ntop .when{margin-left:auto}
 .tagp{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:var(--gold);background:var(--soft);border-radius:99px;padding:2px 9px}.tagp.off{color:var(--mu)}
 .cname{color:var(--mu);font-size:13.5px;margin:-2px 0 10px}
@@ -279,7 +280,7 @@ async function doSignOut(){try{await signOut(auth)}catch(e){}try{await terminate
 const LOGO=document.getElementById("sl").src;
 const LG=`<div class="lg"><img src="${LOGO}" alt="CU MGT-39 Praesidium"></div>`;
 const DAY=864e5,ms=t=>t?.toMillis?t.toMillis():(typeof t==="number"?t:Date.now());
-const TYPES={cancel:"Class cancelled",resched:"Rescheduled",extra:"Extra class",room:"Room change",general:"Announcement"};
+const TYPES={cancel:"Class cancelled",resched:"Rescheduled",extra:"Extra class",room:"Room change",exam:"Exam / Quiz",deadline:"Assignment deadline",general:"Announcement"};
 const COURSES=[["BCC-106","Principles of Marketing",2],["GED-107","Macroeconomics",2],["GED-108","Basic Statistics",2],["BCC-109","Business Law",2],["GED-110","Information and Communication Technology",2]];
 const OLDC=[["BCC-101","Introduction to Business"],["BCC-102","Basic Accounting"],["BCC-103","Basic Mathematics"],["BCC-104","Principles of Management"],["BCC-105","Business Communication"]];
 const normCourse=c=>{c=String(c||"").trim();const m=c.match(/^(bcc|ged)[\s-]?(\d{3})$/i);return m?m[1].toUpperCase()+"-"+m[2]:c};
@@ -290,7 +291,7 @@ const readCourse=()=>{const v=($("#c")||{}).value;return v==="__other__"?(($("#c
 const wireCourse=()=>{const c=$("#c");if(c)c.onchange=()=>{$("#c2w").style.display=c.value==="__other__"?"":"none"}};
 const RL={student:"Student",cr:"CR",teacher:"Teacher",admin:"Admin"};
 const T={js:performance.now()};
-const APP_VERSION="21";
+const APP_VERSION="22";
 const S={nq:"",nv:"up",nLimit:40,nUnsub:null,cf:(()=>{try{const v=localStorage.getItem("mgt_cf");return v&&(v==="all"||v==="general"||COURSES.some(c=>c[0]===v))?v:"all"}catch(e){return "all"}})(),showExp:false,user:null,me:null,meLoaded:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],users:[],tab:"feed",editId:null,formOpen:false,q:"",stage:"load",unsubs:[],reqUnsub:[],reqRole:null,started:false,usersSub:false,shellKey:"",reacts:[],pickId:null,more:false,dataUnsubs:[],ptab:"all",updates:[],rtab:"live",pendPhoto:undefined,openU:null,editMe:false,comments:[],openC:null,chats:[],chat:null,chatWith:null,msgs:[],mUnsub:null,mSubFor:null,mtab:"mine",tq:"",cSub:false,chatRole:null,chatUnsub:[],nLoaded:false,ph:{},exp:{},mAct:null,editMsg:null};
 const $=s=>document.querySelector(s);
 const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -359,7 +360,7 @@ function formDlg(title,fields,okLabel="Save"){return new Promise(res=>{const o=d
 /* ---------- auth screens ---------- */
 function screenLogin(msg){
   $("#app").innerHTML=`<div class="auth-wrap"><div class="ahero">${LG}<p class="atag">Class routine &amp; notice board</p><p class="asub">Department of Management · University of Chittagong</p></div>
-  <div class="acard"><button id="go" class="blk">Continue with Google</button><p class="hint ctr" style="margin-top:12px">Sign in with your Gmail account. New members are approved by the admin before they can see notices.</p>${msg?`<p class="hint ctr" style="color:var(--cancel)">${esc(msg)}</p>`:""}</div></div>`;
+  <div class="acard"><button id="go" class="blk">Continue with Google</button><p class="hint ctr" style="margin-top:12px">Sign in with your Gmail. New members can use the app after the admin approves them. Students with a 2603021xxx@std.cu.ac.bd email get access straight away.</p>${msg?`<p class="hint ctr" style="color:var(--cancel)">${esc(msg)}</p>`:""}</div></div>`;
   $("#go").onclick=async()=>{const gb=$("#go");gb.disabled=true;gb.textContent="Opening Google…";const p=new GoogleAuthProvider();try{await signInWithPopup(auth,p)}catch(e){gb.disabled=false;gb.textContent="Continue with Google";if(["auth/popup-blocked","auth/operation-not-supported-in-this-environment"].includes(e.code))signInWithRedirect(auth,p);else if(e.code!=="auth/popup-closed-by-user")screenLogin("Sign-in failed: "+(e.code||e.message))}};
 }
 function screenRegister(){
@@ -637,7 +638,7 @@ function renderList0(){
   }else if(S.tab==="team")l.innerHTML=teamHtml();
   else if(S.tab==="msgs"){if(S.chat){l.innerHTML=chatView();updateChat()}else l.innerHTML=msgList()}
   else l.innerHTML=meHtml();
-  $("#out2")&&($("#out2").onclick=doSignOut);
+  $("#out2")&&($("#out2").onclick=async()=>{if(await ask("Sign out of MGT-39?"))doSignOut()});
 }
 
 /* ---------- profile ---------- */
@@ -749,9 +750,9 @@ async function sendComment(nid){
 /* ---------- time clash warning ---------- */
 const minOf=t=>{if(!t)return null;const [h,m]=t.split(":").map(Number);return h*60+m};
 function clashes(n){
-  if(!n.date||!n.time||n.type==="cancel"||n.type==="general")return [];
+  if(!n.date||!n.time||n.type==="cancel"||n.type==="general"||n.type==="deadline")return [];
   const s1=minOf(n.time),e1=n.etm?minOf(n.etm):s1+60;
-  return S.notices.filter(m=>{if(m.id===n.id||m.date!==n.date||!m.time||m.type==="cancel"||m.type==="general"||normCourse(m.course)===normCourse(n.course)||!isLive(m))return false;const s2=minOf(m.time),e2=m.etm?minOf(m.etm):s2+60;return s1<e2&&s2<e1});
+  return S.notices.filter(m=>{if(m.id===n.id||m.date!==n.date||!m.time||m.type==="cancel"||m.type==="general"||m.type==="deadline"||normCourse(m.course)===normCourse(n.course)||!isLive(m))return false;const s2=minOf(m.time),e2=m.etm?minOf(m.etm):s2+60;return s1<e2&&s2<e1});
 }
 function clashHtml(n){
   const cl=clashes(n);if(!cl.length)return "";
