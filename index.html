@@ -290,8 +290,8 @@ const readCourse=()=>{const v=($("#c")||{}).value;return v==="__other__"?(($("#c
 const wireCourse=()=>{const c=$("#c");if(c)c.onchange=()=>{$("#c2w").style.display=c.value==="__other__"?"":"none"}};
 const RL={student:"Student",cr:"CR",teacher:"Teacher",admin:"Admin"};
 const T={js:performance.now()};
-const APP_VERSION="19";
-const S={cf:(()=>{try{const v=localStorage.getItem("mgt_cf");return v&&(v==="all"||v==="general"||COURSES.some(c=>c[0]===v))?v:"all"}catch(e){return "all"}})(),showExp:false,user:null,me:null,meLoaded:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],users:[],tab:"feed",editId:null,formOpen:false,q:"",stage:"load",unsubs:[],reqUnsub:[],reqRole:null,started:false,usersSub:false,shellKey:"",reacts:[],pickId:null,more:false,dataUnsubs:[],ptab:"all",updates:[],rtab:"live",pendPhoto:undefined,openU:null,editMe:false,comments:[],openC:null,chats:[],chat:null,chatWith:null,msgs:[],mUnsub:null,mSubFor:null,mtab:"mine",tq:"",cSub:false,chatRole:null,chatUnsub:[],nLoaded:false,ph:{},exp:{},mAct:null,editMsg:null};
+const APP_VERSION="20";
+const S={nq:"",nv:"up",nLimit:40,nUnsub:null,cf:(()=>{try{const v=localStorage.getItem("mgt_cf");return v&&(v==="all"||v==="general"||COURSES.some(c=>c[0]===v))?v:"all"}catch(e){return "all"}})(),showExp:false,user:null,me:null,meLoaded:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],users:[],tab:"feed",editId:null,formOpen:false,q:"",stage:"load",unsubs:[],reqUnsub:[],reqRole:null,started:false,usersSub:false,shellKey:"",reacts:[],pickId:null,more:false,dataUnsubs:[],ptab:"all",updates:[],rtab:"live",pendPhoto:undefined,openU:null,editMe:false,comments:[],openC:null,chats:[],chat:null,chatWith:null,msgs:[],mUnsub:null,mSubFor:null,mtab:"mine",tq:"",cSub:false,chatRole:null,chatUnsub:[],nLoaded:false,ph:{},exp:{},mAct:null,editMsg:null};
 const $=s=>document.querySelector(s);
 const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const rich=t=>esc(t).replace(/@([a-z0-9_]{3,15})/gi,'<span class="mn">@$1</span>');
@@ -430,6 +430,8 @@ function renderForm(){
     }else{
       f.innerHTML=`<div class="bar"><span class="lbl">Notice board</span>${isP()?`<button class="sm" id="open">${ic("plus",16)}New notice</button>`:""}</div>`;
       $("#open")&&($("#open").onclick=()=>{S.formOpen=true;renderForm()});
+      f.insertAdjacentHTML("beforeend",`<div class="search" style="margin:0 0 12px">${ic("search",18)}<input id="nq" placeholder="Search notices (course, title, teacher)" value="${esc(S.nq)}"></div>`);
+      $("#nq").oninput=e=>{S.nq=e.target.value;renderList()};
     }
   }else if(S.tab==="reqs"&&isCR()){
     if(!S.formOpen){f.innerHTML=`<button class="blk" id="open" style="margin-bottom:16px">${ic("plus",18)}Ask a teacher</button>`;$("#open").onclick=()=>{S.formOpen=true;renderForm()};return}
@@ -534,16 +536,20 @@ function dayStrip(){
   return `<div class="card dstrip">${blocks}</div>`;
 }
 function feedHtml(live){
-  const all=S.notices.filter(n=>S.cf==="all"?true:S.cf==="general"?n.type==="general":normCourse(n.course)===S.cf);
+  const q=S.nq.trim().toLowerCase(),today=ymd(new Date()),isUp=n=>n.pin||(n.date?n.date>=today:Date.now()-(n.ts||0)<14*864e5);
+  const hay=n=>[n.type==="general"?n.title:normCourse(n.course)+" "+courseName(n.course),TYPES[n.type],n.note,n.byName,n.byNick].join(" ").toLowerCase();
+  let all=S.notices.filter(n=>S.cf==="all"?true:S.cf==="general"?n.type==="general":normCourse(n.course)===S.cf);
+  if(q)all=all.filter(n=>hay(n).includes(q));else all=all.filter(n=>S.nv==="up"?isUp(n):!isUp(n));
   const act=all.filter(isLive),exp=all.filter(n=>!isLive(n)),pins=act.filter(n=>n.pin),rest=act.filter(n=>!n.pin);
   const pills=`<div class="pills" style="margin:6px 0 4px">${[["all","All"],...COURSES.map(c=>[c[0],c[0]]),["general","General"]].map(([k,v])=>`<button class="pl ${S.cf===k?"on":""}" data-cf="${k}">${v}</button>`).join("")}</div>`;
   let h=installCard()+newBar();
   if(live.length)h+=`<div class="lbl sec" style="margin-top:6px">Class updates · last 24 hours</div>`+live.map(uCardPub).join("");
-  h+=`<div class="lbl sec"${live.length?"":' style="margin-top:6px"'}>Today and tomorrow</div>`+dayStrip()+`<div class="lbl sec">Filter by course</div>`+pills;
+  if(!q)h+=`<div class="lbl sec"${live.length?"":' style="margin-top:6px"'}>Today and tomorrow</div>`+dayStrip();h+=`<div class="lbl sec">Filter by course</div>`+pills+(q?`<div class="mu" style="margin:4px 2px 8px">Search results from all notices</div>`:`<div class="seg" style="margin:6px 0 4px"><button data-nv="up" class="${S.nv==="up"?"on":""}">Upcoming</button><button data-nv="past" class="${S.nv==="past"?"on":""}">Past</button></div>`);
   if(pins.length)h+=`<div class="lbl sec">Pinned</div>`+pins.map(nCard).join("");
   if(rest.length)h+=`<div class="lbl sec">Latest notices</div>`+rest.map(nCard).join("");
   else if(!pins.length)h+=`<div class="lbl sec">Latest notices</div>`+empty("No notices here",S.cf==="all"?"New class updates will appear here.":"Nothing posted for this filter yet.");
   if(isP()&&exp.length)h+=`<button class="tb" style="margin:10px 0" data-showexp="1">${S.showExp?"Hide":"Show"} expired notices · ${exp.length}</button>`+(S.showExp?exp.map(nCard).join(""):"");
+  if(!q&&S.nv==="past"&&S.notices.length>=S.nLimit)h+=`<button class="g blk" style="margin:10px 0" data-older="1">Load older notices</button>`;
   return h;
 }
 const isNew=n=>!isT()&&n.byId!==S.user.uid&&!(n.seen||{})[S.user.uid]&&isLive(n)&&Date.now()-(n.ts||0)<7*864e5;
@@ -917,6 +923,8 @@ document.addEventListener("click",async e=>{
     else if(d.inst){if(dip){dip.prompt();try{await dip.userChoice}catch(e){}dip=null;renderList()}else toast("Chrome menu (⋮) → Install app, or Add to Home screen",6000)}
     else if(d.instx){try{localStorage.setItem("mgt_inst_x","1")}catch(e){}renderList()}
     else if(d.apall)await approveAllStudents();
+    else if(d.nv){S.nv=d.nv;renderList()}
+    else if(d.older){S.nLimit+=40;subNotices();toast("Loading older notices…",1800)}
     else if(d.cf){S.cf=d.cf;try{localStorage.setItem("mgt_cf",d.cf)}catch(e){}renderList()}
     else if(d.showexp){S.showExp=!S.showExp;renderList()}
     else if(d.pinn){const n=S.notices.find(x=>x.id===d.pinn);if(n){await updateDoc(doc(db,"notices",n.id),{pin:!n.pin});toast(n.pin?"Notice unpinned":"Notice pinned")}}
@@ -956,8 +964,9 @@ document.addEventListener("change",async e=>{
 });
 
 /* ---------- state / routing ---------- */
-function stopAll(){[...S.unsubs,...S.dataUnsubs,...S.reqUnsub,...S.chatUnsub].forEach(f=>f());if(S.mUnsub){S.mUnsub();S.mUnsub=null}Object.assign(S,{comments:[],openC:null,chats:[],chat:null,chatWith:null,msgs:[],mSubFor:null,cSub:false,chatRole:null,chatUnsub:[],nLoaded:false,tq:"",mtab:"mine",unsubs:[],dataUnsubs:[],reqUnsub:[],started:false,usersSub:false,ptab:"all",pendPhoto:undefined,me:null,meLoaded:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],reacts:[],updates:[],pickId:null,more:false,users:[],reqRole:null,tab:"feed",formOpen:false,editId:null,editMe:false,openU:null,shellKey:""})}
-function stopData(){[...S.dataUnsubs,...S.reqUnsub,...S.chatUnsub].forEach(f=>f());if(S.mUnsub){S.mUnsub();S.mUnsub=null}Object.assign(S,{comments:[],openC:null,chats:[],chat:null,chatWith:null,msgs:[],mSubFor:null,cSub:false,chatRole:null,chatUnsub:[],nLoaded:false,dataUnsubs:[],reqUnsub:[],started:false,usersSub:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],reacts:[],updates:[],users:[],reqRole:null,shellKey:""})}
+function subNotices(){if(S.nUnsub){S.nUnsub();S.nUnsub=null}S.nUnsub=onSnapshot(query(collection(db,"notices"),orderBy("ts","desc"),limit(S.nLimit||40)),x=>{S.notices=x.docs.map(d=>({id:d.id,...d.data()}));S.nLoaded=true;refresh()},e=>console.warn("notices",e.code))}
+function stopAll(){if(S.nUnsub){S.nUnsub();S.nUnsub=null}[...S.unsubs,...S.dataUnsubs,...S.reqUnsub,...S.chatUnsub].forEach(f=>f());if(S.mUnsub){S.mUnsub();S.mUnsub=null}Object.assign(S,{comments:[],openC:null,chats:[],chat:null,chatWith:null,msgs:[],mSubFor:null,cSub:false,chatRole:null,chatUnsub:[],nLoaded:false,tq:"",mtab:"mine",unsubs:[],dataUnsubs:[],reqUnsub:[],started:false,usersSub:false,ptab:"all",pendPhoto:undefined,me:null,meLoaded:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],reacts:[],updates:[],pickId:null,more:false,users:[],reqRole:null,tab:"feed",formOpen:false,editId:null,editMe:false,openU:null,shellKey:""})}
+function stopData(){if(S.nUnsub){S.nUnsub();S.nUnsub=null}[...S.dataUnsubs,...S.reqUnsub,...S.chatUnsub].forEach(f=>f());if(S.mUnsub){S.mUnsub();S.mUnsub=null}Object.assign(S,{comments:[],openC:null,chats:[],chat:null,chatWith:null,msgs:[],mSubFor:null,cSub:false,chatRole:null,chatUnsub:[],nLoaded:false,dataUnsubs:[],reqUnsub:[],started:false,usersSub:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],reacts:[],updates:[],users:[],reqRole:null,shellKey:""})}
 function subReqs(){
   S.reqUnsub.forEach(f=>f());S.reqUnsub=[];S.reqRole=role();S.reqs=[];const c=collection(db,"requests"),u=S.user.uid;
   const cb=x=>{S.reqs=x.docs.map(d=>({id:d.id,...d.data()}));if(S.stage==="app"){renderNav();if(S.tab==="reqs")renderList()}};
@@ -968,7 +977,7 @@ function subReqs(){
 function startApp(){
   if(!S.started){S.started=true;
     on(S.dataUnsubs,collection(db,"profiles"),x=>{S.profs=x.docs.map(d=>({id:d.id,...d.data()}));T.profs=T.profs||performance.now();S.profsLoaded=true;S.prof=prof(S.user.uid)||null;route()});
-    on(S.dataUnsubs,query(collection(db,"notices"),orderBy("ts","desc"),limit(40)),x=>{S.notices=x.docs.map(d=>({id:d.id,...d.data()}));S.nLoaded=true;refresh()});
+    subNotices();
     on(S.dataUnsubs,query(collection(db,"updates"),orderBy("answeredAt","desc"),limit(50)),x=>{S.updates=x.docs.map(d=>({id:d.id,...d.data()}));
       if(isAdmin())S.updates.filter(u=>Date.now()-ms(u.answeredAt)>DAY+36e5).forEach(u=>deleteDoc(doc(db,"updates",u.id)).catch(()=>{}));refresh()});
   }
