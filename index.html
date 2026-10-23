@@ -290,7 +290,7 @@ const readCourse=()=>{const v=($("#c")||{}).value;return v==="__other__"?(($("#c
 const wireCourse=()=>{const c=$("#c");if(c)c.onchange=()=>{$("#c2w").style.display=c.value==="__other__"?"":"none"}};
 const RL={student:"Student",cr:"CR",teacher:"Teacher",admin:"Admin"};
 const T={js:performance.now()};
-const APP_VERSION="18";
+const APP_VERSION="19";
 const S={cf:(()=>{try{const v=localStorage.getItem("mgt_cf");return v&&(v==="all"||v==="general"||COURSES.some(c=>c[0]===v))?v:"all"}catch(e){return "all"}})(),showExp:false,user:null,me:null,meLoaded:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],users:[],tab:"feed",editId:null,formOpen:false,q:"",stage:"load",unsubs:[],reqUnsub:[],reqRole:null,started:false,usersSub:false,shellKey:"",reacts:[],pickId:null,more:false,dataUnsubs:[],ptab:"all",updates:[],rtab:"live",pendPhoto:undefined,openU:null,editMe:false,comments:[],openC:null,chats:[],chat:null,chatWith:null,msgs:[],mUnsub:null,mSubFor:null,mtab:"mine",tq:"",cSub:false,chatRole:null,chatUnsub:[],nLoaded:false,ph:{},exp:{},mAct:null,editMsg:null};
 const $=s=>document.querySelector(s);
 const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -570,6 +570,18 @@ function downloadIcs(n){
 }
 function paintOff(){let b=document.getElementById("offbar");if(navigator.onLine===false){if(!b){b=document.createElement("div");b.id="offbar";b.className="offbar";b.textContent="Offline. Showing your last saved data.";document.body.appendChild(b)}}else if(b){b.remove();toast("Back online",1800)}}
 addEventListener("online",paintOff);addEventListener("offline",paintOff);paintOff();
+const pendStudents=()=>S.users.filter(u=>stat(u)==="pending"&&(u.reqRole||"student")==="student");
+const aaBar=()=>{const k=pendStudents().length;return k&&(S.ptab==="all"||S.ptab==="pending")?`<div class="card newbar"><span><b>${k}</b> student${k>1?"s":""} waiting</span><button class="sm" data-apall="1">Approve all students</button></div>`:""};
+async function approveAllStudents(){
+  const ps=pendStudents();if(!ps.length)return toast("No students are waiting");
+  if(!(await ask("Approve all "+ps.length+" waiting students?")))return;
+  try{
+    for(let i=0;i<ps.length;i+=120){const bb=writeBatch(db);
+      ps.slice(i,i+120).forEach(u=>{bb.update(doc(db,"users",u.id),{status:"approved",role:"student"});if(prof(u.id))bb.update(doc(db,"profiles",u.id),{role:"student",ok:true});bb.delete(doc(db,"removed",u.id))});
+      await bb.commit()}
+    toast(ps.length+" students approved")
+  }catch(e){fail(e)}
+}
 function renderList0(){
   const l=$("#list");if(!l)return;
   const live=S.updates.filter(u=>Date.now()-ms(u.answeredAt)<DAY);
@@ -590,7 +602,7 @@ function renderList0(){
     let body;
     if(S.ptab==="all"){const a=us.filter(F.all);body=grp("Waiting for approval",a.filter(u=>stat(u)==="pending"))+grp("Admins",a.filter(u=>ap(u)&&u.role==="admin"))+grp("Teachers",a.filter(F.teacher))+grp("CRs",a.filter(F.cr))+grp("Students",a.filter(F.student))}
     else body=grp({pending:"Waiting for approval",teacher:"Teachers",cr:"CRs",student:"Students",blocked:"Block list"}[S.ptab],us.filter(F[S.ptab]));
-    l.innerHTML=pills+(body||empty(S.ptab==="blocked"?"No blocked users":"Nobody here","People appear here once they sign in."));
+    l.innerHTML=pills+aaBar()+(body||empty(S.ptab==="blocked"?"No blocked users":"Nobody here","People appear here once they sign in."));
   }else if(S.tab==="team")l.innerHTML=teamHtml();
   else if(S.tab==="msgs"){if(S.chat){l.innerHTML=chatView();updateChat()}else l.innerHTML=msgList()}
   else l.innerHTML=meHtml();
@@ -648,18 +660,21 @@ async function saveMe(){
 }
 
 /* ---------- actions ---------- */
+const AUTO_RE=/^2603021\d{3}@std\.cu\.ac\.bd$/i;
 async function submitReg(){
   const name=$("#rn").value.trim(),nick=$("#rk").value.trim().toLowerCase().replace(/^@/,"");
   if(name.length<3)return toast("Enter your full name");
   if(!/^[a-z0-9_]{3,15}$/.test(nick))return toast("Nickname: 3–15 letters, numbers or underscore. No spaces.",3200);
-  const uid=S.user.uid,b=writeBatch(db);
-  if(S.me)b.set(doc(db,"profiles",uid),{name,nick,role:S.me.role});
-  else{const rr=$("#rr").value,sid=rr==="student"?($("#rs").value.trim()):"";
-    b.set(doc(db,"users",uid),{name,email:S.user.email,sid,role:"student",status:"pending",reqRole:rr,phone:($("#rp").value.trim()),ts:Date.now()});
-    b.set(doc(db,"profiles",uid),{name,nick,role:"student",ok:false})}
-  b.set(doc(db,"nicks",nick),{uid});
+  const uid=S.user.uid,legacy=!!S.me,rr=legacy?null:$("#rr").value,sid=!legacy&&rr==="student"?($("#rs").value.trim()):"",phone=legacy?"":$("#rp").value.trim();
+  const auto=!legacy&&rr==="student"&&S.user.emailVerified===true&&AUTO_RE.test(S.user.email||"");
+  const run=async ap=>{const b=writeBatch(db);
+    if(legacy)b.set(doc(db,"profiles",uid),{name,nick,role:S.me.role});
+    else{b.set(doc(db,"users",uid),{name,email:S.user.email,sid,role:"student",status:ap?"approved":"pending",reqRole:rr,phone,ts:Date.now()});b.set(doc(db,"profiles",uid),{name,nick,role:"student",ok:!!ap})}
+    b.set(doc(db,"nicks",nick),{uid});await b.commit()};
   $("#sub").disabled=true;
-  try{await b.commit()}catch(e){$("#sub").disabled=false;toast(e.code==="permission-denied"?"That nickname is already taken. Try another.":friendly(e),3200)}
+  try{await run(auto)}catch(e){
+    if(auto&&e.code==="permission-denied"){try{await run(false);return}catch(e2){e=e2}}
+    $("#sub").disabled=false;toast(e.code==="permission-denied"?"That nickname is already taken. Try another.":friendly(e),3200)}
 }
 async function postNotice(){
   const type=$("#ty").value,gen=type==="general";let course="",title="";
@@ -680,13 +695,13 @@ async function askReq(){
   try{await addDoc(collection(db,"requests"),{course:c,message:m,mentions:men,mentionNicks:men.map(id=>prof(id)?.nick||""),byId:S.user.uid,byName:S.me.name,byNick:S.prof.nick,byRole:role(),status:"pending",ts:Date.now()});S.formOpen=false;renderForm();toast("Request sent")}catch(e){fail(e)}
 }
 async function removeUser(id){
-  const p=prof(id),bb=writeBatch(db);
+  const p=prof(id),bb=writeBatch(db);bb.set(doc(db,"removed",id),{ts:Date.now()});
   bb.delete(doc(db,"users",id));bb.delete(doc(db,"profiles",id));if(p?.nick)bb.delete(doc(db,"nicks",p.nick));
   S.notices.forEach(n=>{const u={};if(n.seen&&n.seen[id]!==undefined)u["seen."+id]=deleteField();if(n.rx&&n.rx[id]!==undefined)u["rx."+id]=deleteField();if(Object.keys(u).length)bb.update(doc(db,"notices",n.id),u)});
   bb.delete(doc(db,"photos",id));
   await bb.commit();
 }
-async function setRole(uid,r,extra){const b=writeBatch(db);b.update(doc(db,"users",uid),{role:r,...extra});b.update(doc(db,"profiles",uid),{role:r,...(extra&&extra.status==="approved"?{ok:true}:{})});await b.commit()}
+async function setRole(uid,r,extra){const b=writeBatch(db);b.update(doc(db,"users",uid),{role:r,...extra});if(extra&&extra.status==="approved")b.delete(doc(db,"removed",uid));b.update(doc(db,"profiles",uid),{role:r,...(extra&&extra.status==="approved"?{ok:true}:{})});await b.commit()}
 /* ---------- comments (teachers, CRs, admin only) ---------- */
 const cmOf=id=>S.comments.filter(c=>c.n===id).sort((a,b)=>a.ts-b.ts);
 function cmBtn(n){if(!isP())return "";const k=cmOf(n.id).length;return `<button class="tb ${S.openC===n.id?"on":""}" data-cm="${esc(n.id)}">${ic("reqs",15)}Comments${k?" · "+k:""}</button>`}
@@ -901,6 +916,7 @@ document.addEventListener("click",async e=>{
     else if(d.ics){const n=S.notices.find(x=>x.id===d.ics);if(n)downloadIcs(n)}
     else if(d.inst){if(dip){dip.prompt();try{await dip.userChoice}catch(e){}dip=null;renderList()}else toast("Chrome menu (⋮) → Install app, or Add to Home screen",6000)}
     else if(d.instx){try{localStorage.setItem("mgt_inst_x","1")}catch(e){}renderList()}
+    else if(d.apall)await approveAllStudents();
     else if(d.cf){S.cf=d.cf;try{localStorage.setItem("mgt_cf",d.cf)}catch(e){}renderList()}
     else if(d.showexp){S.showExp=!S.showExp;renderList()}
     else if(d.pinn){const n=S.notices.find(x=>x.id===d.pinn);if(n){await updateDoc(doc(db,"notices",n.id),{pin:!n.pin});toast(n.pin?"Notice unpinned":"Notice pinned")}}
