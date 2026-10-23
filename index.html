@@ -290,7 +290,7 @@ const readCourse=()=>{const v=($("#c")||{}).value;return v==="__other__"?(($("#c
 const wireCourse=()=>{const c=$("#c");if(c)c.onchange=()=>{$("#c2w").style.display=c.value==="__other__"?"":"none"}};
 const RL={student:"Student",cr:"CR",teacher:"Teacher",admin:"Admin"};
 const T={js:performance.now()};
-const APP_VERSION="20";
+const APP_VERSION="21";
 const S={nq:"",nv:"up",nLimit:40,nUnsub:null,cf:(()=>{try{const v=localStorage.getItem("mgt_cf");return v&&(v==="all"||v==="general"||COURSES.some(c=>c[0]===v))?v:"all"}catch(e){return "all"}})(),showExp:false,user:null,me:null,meLoaded:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],users:[],tab:"feed",editId:null,formOpen:false,q:"",stage:"load",unsubs:[],reqUnsub:[],reqRole:null,started:false,usersSub:false,shellKey:"",reacts:[],pickId:null,more:false,dataUnsubs:[],ptab:"all",updates:[],rtab:"live",pendPhoto:undefined,openU:null,editMe:false,comments:[],openC:null,chats:[],chat:null,chatWith:null,msgs:[],mUnsub:null,mSubFor:null,mtab:"mine",tq:"",cSub:false,chatRole:null,chatUnsub:[],nLoaded:false,ph:{},exp:{},mAct:null,editMsg:null};
 const $=s=>document.querySelector(s);
 const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -588,6 +588,31 @@ async function approveAllStudents(){
     toast(ps.length+" students approved")
   }catch(e){fail(e)}
 }
+const backupCard=()=>`<div class="lbl sec">Backup and usage</div><div class="card"><div class="mu1" style="margin-bottom:12px">Download a copy of your data and keep it in Google Drive.</div>
+<button class="g blk" data-bk="members" style="margin-bottom:8px">Members (spreadsheet)</button><button class="g blk" data-bk="proof" style="margin-bottom:8px">Proof records (spreadsheet)</button><button class="g blk" data-bk="all" style="margin-bottom:8px">Full backup (JSON)</button>
+<a class="g blk" href="https://console.firebase.google.com/project/mgt-39/firestore/databases/-default-/usage" target="_blank" rel="noopener" style="text-decoration:none;display:flex;align-items:center;justify-content:center">Check Firebase usage</a></div>`;
+const csvCell=v=>{v=v==null?"":String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+const toCsv=(head,rows)=>"\uFEFF"+[head,...rows].map(r=>r.map(csvCell).join(",")).join("\r\n");
+function saveFile(name,text,type){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+async function backup(kind){
+  toast("Preparing your backup…",1800);
+  try{
+    const get=async c=>(await getDocs(collection(db,c))).docs.map(d=>({id:d.id,...d.data()}));
+    const day=new Date().toISOString().slice(0,10),tsx=t=>t?new Date(ms(t)).toLocaleString():"";
+    if(kind==="members"){
+      const [u,p]=await Promise.all([get("users"),get("profiles")]),pm=Object.fromEntries(p.map(x=>[x.id,x]));
+      saveFile("mgt39-members-"+day+".csv",toCsv(["Name","Nickname","Role","Status","Gmail","Student ID","Mobile"],u.map(x=>[pm[x.id]?.name||x.name,pm[x.id]?.nick||"",x.role,x.status||"approved",x.email,x.sid||"",x.phone||""])),"text/csv");
+    }else if(kind==="proof"){
+      const r=await get("requests");r.sort((a,b)=>a.ts-b.ts);
+      saveFile("mgt39-proof-"+day+".csv",toCsv(["Course","Request","Asked by","Asked at","Answer","Answered by","Answered at","Ref"],r.map(x=>[normCourse(x.course),x.message,(x.byName||"")+" (@"+(x.byNick||"")+")",tsx(x.ts),({yes:"Class will be held",no:"Class cancelled",later:"Will reschedule"})[x.status]||"Waiting",x.repBy?"@"+x.repBy:"",tsx(x.answeredAt),x.id])),"text/csv");
+    }else{
+      const names=["users","profiles","notices","requests","updates","comments"],parts=await Promise.all(names.map(get)),out={app:"MGT-39",exported:new Date().toISOString()};
+      names.forEach((n,i)=>out[n]=parts[i].map(x=>{const y={...x};delete y.photo;return y}));
+      saveFile("mgt39-backup-"+day+".json",JSON.stringify(out,(k,v)=>v&&typeof v==="object"&&typeof v.toMillis==="function"?v.toMillis():v,2),"application/json");
+    }
+    toast("Backup downloaded",2500);
+  }catch(e){fail(e)}
+}
 function renderList0(){
   const l=$("#list");if(!l)return;
   const live=S.updates.filter(u=>Date.now()-ms(u.answeredAt)<DAY);
@@ -641,7 +666,7 @@ function meHtml(){
   <label class="l">Gmail</label><div class="locked">${ic("lock",15)}<span>${esc(u.email)}</span></div>
   <div class="row" style="margin-top:20px"><button class="g" data-cancelme="1">Cancel</button><button data-saveme="1">Save changes</button></div></div>`;
   return card+`<div class="lbl sec">Appearance</div><div class="seg">${[["auto","Auto"],["light","Day"],["dark","Night"]].map(([k,v])=>`<button class="${th===k?"on":""}" data-theme="${k}">${v}</button>`).join("")}</div>
-  <div class="lbl sec">App</div><div class="kvs"><div class="kv"><span>Version</span><b>${APP_VERSION}</b></div></div><button class="g blk" data-upd="1" style="margin-top:10px">${ic("refresh",16)}Update app now</button>
+  <div class="lbl sec">App</div><div class="kvs"><div class="kv"><span>Version</span><b>${APP_VERSION}</b></div></div><button class="g blk" data-upd="1" style="margin-top:10px">${ic("refresh",16)}Update app now</button>${isAdmin()?backupCard():""}
   ${isAdmin()&&!lsGet("mgt_mig")?`<button class="g blk" data-migrate="1" style="margin-top:14px">Move old reactions and seen marks (one time)</button>`:""}
   <button class="g blk" id="out2" style="margin-top:14px">Sign out</button>
   <p class="hint ctr" style="margin-top:16px">Push notifications will arrive in a later update. For now, open the app to see new notices.</p><p class="hint ctr" style="margin-top:4px">${(()=>{const q=k=>T[k]?Math.round(T[k])+"ms":"-";return "Speed: opened "+q("shown")+" · script "+q("js")+" · login "+q("auth")+" · profile "+q("me")+" · data "+q("profs")})()}</p>`;
@@ -909,6 +934,7 @@ document.addEventListener("click",async e=>{
       await bb.commit();toast("Member updated");
     }
     else if(d.exp){S.exp[d.exp]=!S.exp[d.exp];renderList()}
+    else if(d.bk)await backup(d.bk);
     else if(d.upd)await hardRefresh();
     else if(d.bmore){S.mAct=d.bmore;updateChat()}
     else if(d.accent)setAccent(d.accent);
