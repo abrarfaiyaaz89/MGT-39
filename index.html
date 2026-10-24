@@ -272,7 +272,7 @@ html.boot,html.boot body{background:#14213d}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,initializeFirestore,terminate,clearIndexedDbPersistence,persistentLocalCache,persistentMultipleTabManager,doc,setDoc,updateDoc,deleteDoc,addDoc,collection,onSnapshot,query,orderBy,limit,where,writeBatch,serverTimestamp,getDoc,getDocs,deleteField} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,initializeFirestore,terminate,clearIndexedDbPersistence,persistentLocalCache,persistentMultipleTabManager,doc,setDoc,updateDoc,deleteDoc,addDoc,collection,onSnapshot,query,orderBy,limit,where,writeBatch,serverTimestamp,getDoc,getDocs,deleteField,arrayUnion} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const app=initializeApp({apiKey:"AIzaSyBlKJRh4tzKPBHYwMeVq4UqleA3y_aayG0",authDomain:"mgt-39.firebaseapp.com",projectId:"mgt-39",storageBucket:"mgt-39.firebasestorage.app",messagingSenderId:"737272189071",appId:"1:737272189071:web:d0d362a17d0a1efa72a0fa"});
 const auth=getAuth(app);
@@ -292,7 +292,7 @@ const readCourse=()=>{const v=($("#c")||{}).value;return v==="__other__"?(($("#c
 const wireCourse=()=>{const c=$("#c");if(c)c.onchange=()=>{$("#c2w").style.display=c.value==="__other__"?"":"none"}};
 const RL={student:"Student",cr:"CR",teacher:"Teacher",admin:"Admin"};
 const T={js:performance.now()};
-const APP_VERSION="23";
+const APP_VERSION="24";
 const S={nq:"",nv:"up",nLimit:40,nUnsub:null,cf:(()=>{try{const v=localStorage.getItem("mgt_cf");return v&&(v==="all"||v==="general"||COURSES.some(c=>c[0]===v))?v:"all"}catch(e){return "all"}})(),showExp:false,user:null,me:null,meLoaded:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],users:[],tab:"feed",editId:null,formOpen:false,q:"",stage:"load",unsubs:[],reqUnsub:[],reqRole:null,started:false,usersSub:false,shellKey:"",reacts:[],pickId:null,more:false,dataUnsubs:[],ptab:"all",updates:[],rtab:"live",pendPhoto:undefined,openU:null,editMe:false,comments:[],openC:null,chats:[],chat:null,chatWith:null,msgs:[],mUnsub:null,mSubFor:null,mtab:"mine",tq:"",cSub:false,chatRole:null,chatUnsub:[],nLoaded:false,ph:{},exp:{},mAct:null,editMsg:null};
 const $=s=>document.querySelector(s);
 const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -545,7 +545,7 @@ function feedHtml(live){
   if(q)all=all.filter(n=>hay(n).includes(q));else all=all.filter(n=>S.nv==="up"?isUp(n):!isUp(n));
   const act=all.filter(isLive),exp=all.filter(n=>!isLive(n)),must=act.filter(needCheck),pins=act.filter(n=>n.pin&&!needCheck(n)),rest=act.filter(n=>!n.pin&&!needCheck(n));
   const pills=`<div class="pills" style="margin:6px 0 4px">${[["all","All"],...COURSES.map(c=>[c[0],c[0]]),["general","General"]].map(([k,v])=>`<button class="pl ${S.cf===k?"on":""}" data-cf="${k}">${v}</button>`).join("")}</div>`;
-  let h=installCard()+newBar();if(must.length)h+=`<div class="lbl sec" style="margin-top:6px">Please check</div>`+must.map(nCard).join("");
+  let h=installCard()+pushCard()+newBar();if(must.length)h+=`<div class="lbl sec" style="margin-top:6px">Please check</div>`+must.map(nCard).join("");
   if(live.length)h+=`<div class="lbl sec" style="margin-top:6px">Class updates · last 24 hours</div>`+live.map(uCardPub).join("");
   if(!q)h+=`<div class="lbl sec"${live.length?"":' style="margin-top:6px"'}>Today and tomorrow</div>`+dayStrip();h+=`<div class="lbl sec">Filter by course</div>`+pills+(q?`<div class="mu" style="margin:4px 2px 8px">Search results from all notices</div>`:`<div class="seg" style="margin:6px 0 4px"><button data-nv="up" class="${S.nv==="up"?"on":""}">Upcoming</button><button data-nv="past" class="${S.nv==="past"?"on":""}">Past</button></div>`);
   if(pins.length)h+=`<div class="lbl sec">Pinned</div>`+pins.map(nCard).join("");
@@ -641,6 +641,27 @@ async function backup(kind){
     toast("Backup downloaded",2500);
   }catch(e){fail(e)}
 }
+const pushOK=()=>typeof Notification!=="undefined"&&"serviceWorker" in navigator&&"PushManager" in window;
+const pushState=()=>!pushOK()?"unsupported":Notification.permission;
+const pushCard=()=>pushState()==="default"&&!lsGet("mgt_push_x")?`<div class="card inst"><div><b>Get notified</b><div class="mu1">Class updates on your phone, even when the app is closed.</div></div><div class="row"><button class="sm" data-pushon="1">Turn on</button><button class="tb" data-pushx="1" aria-label="Dismiss">${ic("x",16)}</button></div></div>`:"";
+const pushMeCard=()=>{const st=pushState(),txt=st==="granted"?"Notifications are on for this device.":st==="denied"?"Notifications are blocked. Allow them in your browser's site settings, then come back.":st==="unsupported"?"This browser can't show notifications. On iPhone, add the app to your Home Screen first.":"Get class updates even when the app is closed.";
+  return `<div class="lbl sec">Notifications</div><div class="card"><div class="mu1" style="margin-bottom:${st==="default"||st==="granted"?10:0}px">${txt}</div>${st==="default"?`<button class="blk" data-pushon="1">Turn on notifications</button>`:st==="granted"?`<button class="g blk" data-pushon="1">Refresh this device</button>`:""}</div>`};
+const pushAdminCard=()=>`<div class="lbl sec">Push setup (admin)</div><div class="card"><div class="mu1" style="margin-bottom:10px">Paste the Web Push key pair from Firebase (Project settings, Cloud Messaging, Web Push certificates), then Save.</div><input id="vk" placeholder="Web Push public key" autocomplete="off"><button class="blk" data-vsave="1" style="margin-top:8px">Save key</button></div>`;
+async function enablePush(silent){
+  try{
+    if(!pushOK())return silent||toast("This browser can't show notifications.",3500);
+    if(Notification.permission!=="granted"){const perm=await Notification.requestPermission();if(perm!=="granted")return toast("Notifications are blocked. Allow them in the browser settings.",4500)}
+    const cfg=await getDoc(doc(db,"config","push")),vapid=cfg.exists()?cfg.data().vapid:"";
+    if(!vapid)return silent||toast("Push is not set up yet. Ask the admin.",4000);
+    const {getMessaging,getToken}=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js");
+    const reg=await navigator.serviceWorker.ready,token=await getToken(getMessaging(app),{vapidKey:vapid,serviceWorkerRegistration:reg});
+    if(!token)throw new Error("no token");
+    await setDoc(doc(db,"tokens",S.user.uid),{uid:S.user.uid,tokens:arrayUnion(token),ts:Date.now()},{merge:true});
+    try{localStorage.setItem("mgt_push","1")}catch(e){}
+    if(!silent){toast("Notifications are on",2500);renderList()}
+  }catch(e){console.warn("push",e);silent||toast("Could not turn on notifications. Try again.",3500)}
+}
+const pushInit=()=>{if(pushOK()&&Notification.permission==="granted"&&lsGet("mgt_push"))enablePush(true)};
 function renderList0(){
   const l=$("#list");if(!l)return;
   const live=S.updates.filter(u=>Date.now()-ms(u.answeredAt)<DAY);
@@ -694,7 +715,7 @@ function meHtml(){
   <label class="l">Gmail</label><div class="locked">${ic("lock",15)}<span>${esc(u.email)}</span></div>
   <div class="row" style="margin-top:20px"><button class="g" data-cancelme="1">Cancel</button><button data-saveme="1">Save changes</button></div></div>`;
   return card+`<div class="lbl sec">Appearance</div><div class="seg">${[["auto","Auto"],["light","Day"],["dark","Night"]].map(([k,v])=>`<button class="${th===k?"on":""}" data-theme="${k}">${v}</button>`).join("")}</div>
-  <div class="lbl sec">App</div><div class="kvs"><div class="kv"><span>Version</span><b>${APP_VERSION}</b></div></div><button class="g blk" data-upd="1" style="margin-top:10px">${ic("refresh",16)}Update app now</button>${isAdmin()?backupCard():""}
+  <div class="lbl sec">App</div><div class="kvs"><div class="kv"><span>Version</span><b>${APP_VERSION}</b></div></div><button class="g blk" data-upd="1" style="margin-top:10px">${ic("refresh",16)}Update app now</button>${pushMeCard()}${isAdmin()?pushAdminCard()+backupCard():""}
   ${isAdmin()&&!lsGet("mgt_mig")?`<button class="g blk" data-migrate="1" style="margin-top:14px">Move old reactions and seen marks (one time)</button>`:""}
   <button class="g blk" id="out2" style="margin-top:14px">Sign out</button>
   <p class="hint ctr" style="margin-top:16px">Push notifications will arrive in a later update. For now, open the app to see new notices.</p><p class="hint ctr" style="margin-top:4px">${(()=>{const q=k=>T[k]?Math.round(T[k])+"ms":"-";return "Speed: opened "+q("shown")+" · script "+q("js")+" · login "+q("auth")+" · profile "+q("me")+" · data "+q("profs")})()}</p>`;
@@ -962,6 +983,9 @@ document.addEventListener("click",async e=>{
       await bb.commit();toast("Member updated");
     }
     else if(d.exp){S.exp[d.exp]=!S.exp[d.exp];renderList()}
+    else if(d.pushon)await enablePush();
+    else if(d.pushx){try{localStorage.setItem("mgt_push_x","1")}catch(e){}renderList()}
+    else if(d.vsave){const v=(($("#vk")||{}).value||"").trim();if(v.length<40)return toast("That key looks too short",2500);await setDoc(doc(db,"config","push"),{vapid:v,ts:Date.now()});toast("Push key saved",2500)}
     else if(d.bk)await backup(d.bk);
     else if(d.upd)await hardRefresh();
     else if(d.bmore){S.mAct=d.bmore;updateChat()}
@@ -1058,7 +1082,7 @@ function route(){
   if(st==="app"&&S.stage==="app"){if(S.shellKey!==role()+"|"+(S.prof?.nick||"")){if(S.reqRole!==role())subReqs();shell()}else refresh();return}
   S.stage=st;
   document.body.classList.toggle("auth",["login","register","wait"].includes(st));
-  if(st==="login")screenLogin();else if(st==="register")screenRegister();else if(st==="wait")screenWait();else if(st==="app"){shell();syncNav();maybeTour()}else $("#app").innerHTML='<div class="load"><div class="spin"></div></div>';
+  if(st==="login")screenLogin();else if(st==="register")screenRegister();else if(st==="wait")screenWait();else if(st==="app"){shell();syncNav();maybeTour();pushInit()}else $("#app").innerHTML='<div class="load"><div class="spin"></div></div>';
   if(st!=="load")hideSplash();
 }
 setInterval(()=>{if(S.stage==="app"&&["feed","reqs"].includes(S.tab)){renderNav();renderList()}},60000);
