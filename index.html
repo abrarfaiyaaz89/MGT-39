@@ -285,12 +285,12 @@ button.rtb{width:36px;height:36px;padding:0;border-radius:50%;background:var(--s
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,initializeFirestore,terminate,clearIndexedDbPersistence,persistentLocalCache,persistentMultipleTabManager,doc,setDoc,updateDoc,deleteDoc,addDoc,collection,onSnapshot,query,orderBy,limit,where,writeBatch,serverTimestamp,getDoc,getDocs,deleteField,arrayUnion} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,initializeFirestore,terminate,clearIndexedDbPersistence,persistentLocalCache,persistentMultipleTabManager,doc,setDoc,updateDoc,deleteDoc,addDoc,collection,onSnapshot,query,orderBy,limit,where,writeBatch,serverTimestamp,getDoc,getDocs,deleteField,arrayUnion,persistentSingleTabManager} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const app=initializeApp({apiKey:"AIzaSyBlKJRh4tzKPBHYwMeVq4UqleA3y_aayG0",authDomain:"mgt-39.firebaseapp.com",projectId:"mgt-39",storageBucket:"mgt-39.firebasestorage.app",messagingSenderId:"737272189071",appId:"1:737272189071:web:d0d362a17d0a1efa72a0fa"});
 const auth=getAuth(app);
 let db;try{db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()}),experimentalForceLongPolling:true})}catch(e){db=getFirestore(app)}
-async function doSignOut(){try{const u=auth.currentUser&&auth.currentUser.uid;if(u)localStorage.removeItem("mgt_pa_"+u)}catch(e){}try{await signOut(auth)}catch(e){}try{await terminate(db);await clearIndexedDbPersistence(db)}catch(e){}location.reload()}
+async function doSignOut(){try{const u=auth.currentUser&&auth.currentUser.uid;if(u){localStorage.removeItem("mgt_pa_"+u);localStorage.removeItem("mgt_c_"+u)}}catch(e){}try{await signOut(auth)}catch(e){}try{await terminate(db);await clearIndexedDbPersistence(db)}catch(e){}location.reload()}
 const LOGO=document.getElementById("sl").src;
 const LG=`<div class="lg"><img src="${LOGO}" alt="CU MGT-39 Praesidium"></div>`;
 const DAY=864e5,ms=t=>t?.toMillis?t.toMillis():(typeof t==="number"?t:Date.now());
@@ -305,7 +305,7 @@ const readCourse=()=>{const v=($("#c")||{}).value;return v==="__other__"?(($("#c
 const wireCourse=()=>{const c=$("#c");if(c)c.onchange=()=>{$("#c2w").style.display=c.value==="__other__"?"":"none"}};
 const RL={student:"Student",cr:"CR",teacher:"Teacher",admin:"Admin"};
 const T={js:performance.now()};
-const APP_VERSION="26";
+const APP_VERSION="27";
 const S={rd:(()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")})(),routine:null,rUnsub:null,nq:"",nv:"up",nLimit:40,nUnsub:null,cf:(()=>{try{const v=localStorage.getItem("mgt_cf");return v&&(v==="all"||v==="general"||COURSES.some(c=>c[0]===v))?v:"all"}catch(e){return "all"}})(),showExp:false,user:null,me:null,meLoaded:false,profs:[],profsLoaded:false,prof:null,notices:[],reqs:[],acks:[],users:[],tab:"feed",editId:null,formOpen:false,q:"",stage:"load",unsubs:[],reqUnsub:[],reqRole:null,started:false,usersSub:false,shellKey:"",reacts:[],pickId:null,more:false,dataUnsubs:[],ptab:"all",updates:[],rtab:"live",pendPhoto:undefined,openU:null,editMe:false,comments:[],openC:null,chats:[],chat:null,chatWith:null,msgs:[],mUnsub:null,mSubFor:null,mtab:"mine",tq:"",cSub:false,chatRole:null,chatUnsub:[],nLoaded:false,ph:{},exp:{},mAct:null,editMsg:null};
 const $=s=>document.querySelector(s);
 const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -768,6 +768,7 @@ function routineEditor(){
     }catch(e){fail(e)}
   };
 }
+const speedLine=()=>{const r=x=>x?(x/1000).toFixed(1)+"s":"–";return r(T.shown)+(S.fromCache?" (instant)":"")+" · login "+r(T.auth)+" · profile "+r(T.me)+" · data "+r(T.profs)};
 function renderList0(){
   const l=$("#list");if(!l)return;
   const live=S.updates.filter(u=>Date.now()-ms(u.answeredAt)<DAY);
@@ -821,7 +822,7 @@ function meHtml(){
   <label class="l">Gmail</label><div class="locked">${ic("lock",15)}<span>${esc(u.email)}</span></div>
   <div class="row" style="margin-top:20px"><button class="g" data-cancelme="1">Cancel</button><button data-saveme="1">Save changes</button></div></div>`;
   return card+`<div class="lbl sec">Appearance</div><div class="seg">${[["auto","Auto"],["light","Day"],["dark","Night"]].map(([k,v])=>`<button class="${th===k?"on":""}" data-theme="${k}">${v}</button>`).join("")}</div>
-  <div class="lbl sec">App</div><div class="kvs"><div class="kv"><span>Version</span><b>${APP_VERSION}</b></div></div><button class="g blk" data-upd="1" style="margin-top:10px">${ic("refresh",16)}Update app now</button>${pushMeCard()}${isAdmin()?pushAdminCard()+backupCard():""}
+  <div class="lbl sec">App</div><div class="kvs"><div class="kv"><span>Version</span><b>${APP_VERSION}</b></div><div class="kv"><span>Last open</span><b>${speedLine()}</b></div></div><button class="g blk" data-upd="1" style="margin-top:10px">${ic("refresh",16)}Update app now</button>${pushMeCard()}${isAdmin()?pushAdminCard()+backupCard():""}
   ${isAdmin()&&!lsGet("mgt_mig")?`<button class="g blk" data-migrate="1" style="margin-top:14px">Move old reactions and seen marks (one time)</button>`:""}
   <button class="g blk" id="out2" style="margin-top:14px">Sign out</button>
   <p class="hint ctr" style="margin-top:16px">Push notifications will arrive in a later update. For now, open the app to see new notices.</p><p class="hint ctr" style="margin-top:4px">${(()=>{const q=k=>T[k]?Math.round(T[k])+"ms":"-";return "Speed: opened "+q("shown")+" · script "+q("js")+" · login "+q("auth")+" · profile "+q("me")+" · data "+q("profs")})()}</p>`;
@@ -1175,7 +1176,9 @@ function startApp(){
   if(isP()&&!S.cSub){S.cSub=true;on(S.dataUnsubs,query(collection(db,"comments"),orderBy("ts","desc"),limit(150)),x=>{S.comments=x.docs.map(d=>({id:d.id,...d.data()}));refresh()})}
   if(isAdmin()&&!S.usersSub){S.usersSub=true;on(S.dataUnsubs,query(collection(db,"users"),limit(400)),x=>{S.users=x.docs.map(d=>({id:d.id,...d.data()}));refresh()})}
 }
-function refresh(){if(S.stage!=="app")return;renderNav();if(S.tab==="msgs"&&S.chat){updateChat();return}if(S.tab!=="me")renderList()}
+let cT=null;
+function saveCache(){if(!S.user||!S.me)return;clearTimeout(cT);cT=setTimeout(()=>{try{localStorage.setItem("mgt_c_"+S.user.uid,JSON.stringify({v:1,t:Date.now(),me:S.me,profs:S.profs.map(({photo,...q})=>q),notices:S.notices.slice(0,40),routine:S.routine,rd:S.rd}))}catch(e){}},1200)}
+function refresh(){if(S.stage!=="app")return;saveCache();renderNav();if(S.tab==="msgs"&&S.chat){updateChat();return}if(S.tab!=="me")renderList()}
 let splashGone=false;
 function hideSplash(){if(splashGone)return;splashGone=true;const s=$("#splash");if(!s)return;const quick=Date.now()-Number(lsGet("mgt_last")||0)<18e5,target=window.__intro?(window.__introStart||0)+2700:(quick?450:1100);try{localStorage.setItem("mgt_last",String(Date.now()))}catch(e){}setTimeout(()=>{T.shown=performance.now();s.remove();document.documentElement.classList.remove("boot")},Math.max(0,target-performance.now()))}
 setTimeout(hideSplash,9000);
@@ -1251,7 +1254,9 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden)checkUpdat
 onAuthStateChanged(auth,u=>{
   stopAll();S.user=u;T.auth=T.auth||performance.now();
   if(!u){S.stage="";route();return}
+  try{const c=JSON.parse(lsGet("mgt_c_"+u.uid)||"null");if(c&&c.me&&(c.me.status||"approved")==="approved"&&Array.isArray(c.profs)&&c.profs.some(q=>q.id===u.uid)){S.me=c.me;S.meLoaded=true;S.profs=c.profs;S.profsLoaded=true;S.prof=c.profs.find(q=>q.id===u.uid);S.notices=c.notices||[];S.nLoaded=true;if(c.rd===S.rd)S.routine=c.routine||null;S.fromCache=true}}catch(e){}
   S.stage="load";route();
+  setTimeout(()=>{if(S.stage==="load"){const m=document.querySelector("#app .mu");if(m)m.textContent="Slow connection. Still loading…"}},8000);
   try{if(lsGet("mgt_ok_"+u.uid)==="1")startApp()}catch(e){}
   on(S.unsubs,doc(db,"users",u.uid),s=>{T.me=T.me||performance.now();S.meLoaded=true;S.me=s.exists()?{uid:u.uid,...s.data()}:null;route()});
 });
